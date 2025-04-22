@@ -27,7 +27,7 @@ export default function BookingForm() {
   const [isPending, startTransition] = useTransition()
 
   // Updated time slots as requested
-  const timeSlots = ["Morning (09:30 - 12:30)", "Afternoon (13:30 - 17:30)"]
+ const timeSlots = ["Morning (09:30 - 12:30)", "Afternoon (13:30 - 17:30)", "Weekend Sat/Sun (10:30 - 13:30)"]
 
   const disabledDays = (date: Date) => {
     const today = new Date()
