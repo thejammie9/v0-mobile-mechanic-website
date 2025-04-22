@@ -7,14 +7,14 @@ export default function Gallery() {
   const galleryItems = {
     engine: [
       {
-        title: "Engine Rebuild",
-        description: "Complete engine rebuild on a 2018 Ford Focus",
+        title: "Head Unit Upgade",
+        description: "Head Unit Upgrade With Apple/Android Carplay VW Scirocco 2009",
         imageBefore: "/placeholder.svg?height=400&width=600",
         imageAfter: "/placeholder.svg?height=400&width=600",
       },
       {
-        title: "Timing Belt Replacement",
-        description: "Timing belt and water pump replacement on a VW Golf",
+        title: "Full Engine Service",
+        description: "Full Engine Service With Oil & Filters On 2018 Seat Leon Cupra",
         imageBefore: "/placeholder.svg?height=400&width=600",
         imageAfter: "/placeholder.svg?height=400&width=600",
       },
@@ -22,13 +22,13 @@ export default function Gallery() {
     brakes: [
       {
         title: "Brake System Overhaul",
-        description: "Complete brake system replacement on a BMW 3 Series",
+        description: "Front Pads & Discs on a 2018 Seat Leon Cupra FR",
         imageBefore: "/placeholder.svg?height=400&width=600",
         imageAfter: "/placeholder.svg?height=400&width=600",
       },
       {
         title: "Disc and Pad Replacement",
-        description: "Front and rear brake disc and pad replacement on an Audi A4",
+        description: "Front and rear brake disc and pad replacement on an Skoda Octavia",
         imageBefore: "/placeholder.svg?height=400&width=600",
         imageAfter: "/placeholder.svg?height=400&width=600",
       },
