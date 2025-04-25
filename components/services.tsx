@@ -1,5 +1,8 @@
-import { Wrench, AlertTriangle, Car, Cog, Battery, Disc, FuelIcon as Oil } from "lucide-react"
+import { Wrench, AlertTriangle, Car, Cog } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { CarBattery } from "./icons/car-battery"
+import { BrakeDisc } from "./icons/brake-disc"
+import { OilCan } from "./icons/oil-can"
 
 const services = [
   {
@@ -10,7 +13,7 @@ const services = [
   {
     title: "Brake Servicing",
     description: "Complete brake system inspection, repair and replacement.",
-    icon: <Disc className="h-10 w-10 text-blue-800" />, // Changed from Gauge to Disc
+    icon: <BrakeDisc />, // Custom brake disc icon
   },
   {
     title: "Diagnostics",
@@ -20,7 +23,7 @@ const services = [
   {
     title: "Battery Replacement",
     description: "On-the-spot battery testing and replacement services.",
-    icon: <Battery className="h-10 w-10 text-blue-800" />, // Using the correct Battery icon
+    icon: <CarBattery />, // Custom car battery icon
   },
   {
     title: "MOT Preparation",
@@ -30,7 +33,7 @@ const services = [
   {
     title: "Oil Changes",
     description: "Quick and clean oil and filter changes using quality products.",
-    icon: <Oil className="h-10 w-10 text-blue-800" />, // Changed to Oil icon
+    icon: <OilCan />, // Custom oil can icon
   },
   {
     title: "Electrical Systems",
