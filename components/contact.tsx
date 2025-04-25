@@ -32,7 +32,9 @@ export default function Contact() {
                   <MapPin className="h-5 w-5 text-orange-600 mt-1 mr-3" />
                   <div>
                     <p className="font-medium">Service Area</p>
-                    <p className="text-gray-600">Edinburgh, Dalkeith and surrounding areas (within 20 miles)</p>
+                    <p className="text-gray-600">
+                      Edinburgh, Dalkeith, Musselburgh, Gorebridge, Bonnyrigg and surrounding areas (within 20 miles)
+                    </p>
                   </div>
                 </div>
               </div>
@@ -67,7 +69,7 @@ export default function Contact() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Edinburgh and Dalkeith service area map"
+              title="Edinburgh and surrounding areas service map"
             ></iframe>
           </div>
         </div>
