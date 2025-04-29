@@ -1,14 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
+  images: {
+    unoptimized: true,
+  },
+  // This helps with compatibility
+  reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
-  images: {
-    unoptimized: true,
-  },
 }
 
-export default nextConfig
+module.exports = nextConfig
