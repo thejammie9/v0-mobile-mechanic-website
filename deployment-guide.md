@@ -2,67 +2,33 @@
 
 This guide will help you deploy the static version of your Next.js website to Verpex hosting.
 
-## Step 1: Prepare Your Project
+## Step 1: Remove Dynamic Routes
 
-1. Make sure you have the scripts folder with:
-   - `prepare-static-build.js` - Removes dynamic routes before building
-   - `restore-dynamic-routes.js` - Restores dynamic routes after building
+Before building, run the script to remove dynamic routes:
 
-2. Update your package.json scripts:
-   \`\`\`json
-   "scripts": {
-     "dev": "next dev",
-     "prebuild": "node scripts/prepare-static-build.js",
-     "build": "next build",
-     "postbuild": "node scripts/restore-dynamic-routes.js",
-     "start": "next start",
-     "lint": "next lint"
-   }
-   \`\`\`
+\`\`\`bash
+node remove-dynamic-routes.js
+\`\`\`
+
+This will delete the `/app/bookings/[id]` folder which is causing the build error.
 
 ## Step 2: Build the Static Export
 
-1. Run the build command:
-   \`\`\`bash
-   npm run build
-   \`\`\`
-   This will:
-   - Remove dynamic routes before building
-   - Create an `out` directory with all static files
-   - Restore dynamic routes after building (for development)
+Run the build command:
 
-## Step 3: Prepare Additional Files
+\`\`\`bash
+npm run build
+\`\`\`
 
-1. Create the following directory structure in your `out` directory:
-   - `/api` - For API endpoints
-   - `/bookings` - For booking cancellation
-   - `/admin` - For admin interface
-   - `/js` - For JavaScript files
-   - `/css` - For CSS files
+This will create an `out` directory with all static files.
 
-2. Copy the following files to your `out` directory:
-   - `.htaccess` (root level)
-   - `api/submit-booking.php`
-   - `bookings/cancel.php`
-   - `bookings/index.php`
-   - `js/booking-form-static.js`
-   - `admin/index.php`
-   - `admin/login.php`
-   - `admin/logout.php`
-   - `css/admin.css`
+## Step 3: Add PHP Files
 
-3. Add a script tag to load the booking form JavaScript in your HTML:
-   ```html
-   <script src="/js/booking-form-static.js"></script>
-   \`\`\`
+After building, add these PHP files to your `out` directory:
 
-4. Update the booking form HTML to include an ID and status message container:
-   ```html
-   <form id="booking-form" class="...">
-     <!-- Form fields -->
-   </form>
-   <div id="form-status"></div>
-   \`\`\`
+1. `/bookings/cancel.php` - For handling booking cancellations
+2. `/bookings/index.php` - For redirecting to homepage
+3. `/api/submit-booking.php` - For handling form submissions
 
 ## Step 4: Upload to Verpex
 
@@ -85,17 +51,17 @@ This guide will help you deploy the static version of your Next.js website to Ve
 
 ## Step 6: Update Configuration
 
-1. Edit the following files to update database credentials:
-   - `api/submit-booking.php`
-   - `bookings/cancel.php`
-   - `admin/index.php`
-   - `admin/login.php`
+Edit the following files to update database credentials:
+- `api/submit-booking.php`
+- `bookings/cancel.php`
+- `admin/index.php`
+- `admin/login.php`
 
-2. Replace these placeholders:
-   - `YOUR_DB_USER`
-   - `YOUR_DB_PASSWORD`
-   - `YOUR_DB_NAME`
-   - `YOUR_ADMIN_PASSWORD`
+Replace these placeholders:
+- `YOUR_DB_USER`
+- `YOUR_DB_PASSWORD`
+- `YOUR_DB_NAME`
+- `YOUR_ADMIN_PASSWORD`
 
 ## Step 7: Test Your Website
 
@@ -104,23 +70,3 @@ This guide will help you deploy the static version of your Next.js website to Ve
 3. Test the booking cancellation link
 4. Log in to the admin area at `/admin/login.php`
 5. Verify emails are being sent
-
-## Troubleshooting
-
-### CSS Not Loading
-- Check that the .htaccess file is properly uploaded
-- Verify file permissions
-- Check browser console for errors
-
-### Form Not Working
-- Check browser console for JavaScript errors
-- Verify PHP is enabled on your hosting
-- Check database connection
-
-### Images Not Displaying
-- Verify image paths are correct
-- Check file permissions
-
-### Email Not Sending
-- Contact Verpex support to ensure mail() function is enabled
-- Consider using an SMTP library for more reliable email delivery
