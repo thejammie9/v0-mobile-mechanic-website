@@ -3,7 +3,7 @@
 ## Step 1: Prepare for Static Export
 
 1. Make sure you have the `delete-dynamic-routes.js` script in your project root
-2. Ensure your `next.config.js` has `output: "export"` and the `exportPathMap` configuration
+2. Ensure your `next.config.js` has `output: "export"` configuration
 3. Verify that your `package.json` has the prebuild script: `"prebuild": "node delete-dynamic-routes.js"`
 
 ## Step 2: Build the Project
