@@ -2,33 +2,51 @@
 
 This guide will help you deploy the static version of your Next.js website to Verpex hosting.
 
-## Step 1: Remove Dynamic Routes
+## Step 1: Prepare Your Project
 
-Before building, run the script to remove dynamic routes:
+1. Make sure you have the pre-build cleanup script in place:
+   - `scripts/pre-build-cleanup.js` - Removes dynamic routes before building
 
-\`\`\`bash
-node remove-dynamic-routes.js
-\`\`\`
-
-This will delete the `/app/bookings/[id]` folder which is causing the build error.
+2. Update your package.json scripts:
+   \`\`\`json
+   "scripts": {
+     "dev": "next dev",
+     "build": "node scripts/pre-build-cleanup.js && next build",
+     "start": "next start",
+     "lint": "next lint"
+   }
+   \`\`\`
 
 ## Step 2: Build the Static Export
 
-Run the build command:
+1. Run the build command:
+   \`\`\`bash
+   npm run build
+   \`\`\`
+   This will:
+   - Remove dynamic routes before building
+   - Create an `out` directory with all static files
 
-\`\`\`bash
-npm run build
-\`\`\`
 
-This will create an `out` directory with all static files.
+## Step 3: Prepare Additional Files
 
-## Step 3: Add PHP Files
+1. Create the following directory structure in your `out` directory:
+   - `/api` - For API endpoints
+   - `/bookings` - For booking cancellation
+   - `/admin` - For admin interface
+   - `/js` - For JavaScript files
+   - `/css` - For CSS files
 
-After building, add these PHP files to your `out` directory:
-
-1. `/bookings/cancel.php` - For handling booking cancellations
-2. `/bookings/index.php` - For redirecting to homepage
-3. `/api/submit-booking.php` - For handling form submissions
+2. Copy the following files to your `out` directory:
+   - `.htaccess` (root level)
+   - `api/submit-booking.php`
+   - `bookings/cancel.php`
+   - `bookings/index.php`
+   - `js/booking-form-static.js`
+   - `admin/index.php`
+   - `admin/login.php`
+   - `admin/logout.php`
+   - `css/admin.css`
 
 ## Step 4: Upload to Verpex
 
@@ -51,17 +69,17 @@ After building, add these PHP files to your `out` directory:
 
 ## Step 6: Update Configuration
 
-Edit the following files to update database credentials:
-- `api/submit-booking.php`
-- `bookings/cancel.php`
-- `admin/index.php`
-- `admin/login.php`
+1. Edit the following files to update database credentials:
+   - `api/submit-booking.php`
+   - `bookings/cancel.php`
+   - `admin/index.php`
+   - `admin/login.php`
 
-Replace these placeholders:
-- `YOUR_DB_USER`
-- `YOUR_DB_PASSWORD`
-- `YOUR_DB_NAME`
-- `YOUR_ADMIN_PASSWORD`
+2. Replace these placeholders:
+   - `YOUR_DB_USER`
+   - `YOUR_DB_PASSWORD`
+   - `YOUR_DB_NAME`
+   - `YOUR_ADMIN_PASSWORD`
 
 ## Step 7: Test Your Website
 
