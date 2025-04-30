@@ -1,18 +1,12 @@
 # Deployment Guide for Jamie's Auto Care Website
 
-This guide will help you deploy the static version of your Next.js website to Verpex hosting.
+## Step 1: Prepare for Static Export
 
-## Step 1: Remove Dynamic Routes
+1. Make sure you have the `delete-dynamic-routes.js` script in your project root
+2. Ensure your `next.config.js` has `output: "export"` and the `exportPathMap` configuration
+3. Verify that your `package.json` has the prebuild script: `"prebuild": "node delete-dynamic-routes.js"`
 
-Before building, run the script to remove dynamic routes:
-
-\`\`\`bash
-node remove-dynamic-routes.js
-\`\`\`
-
-This will delete any dynamic route folders that are incompatible with static export.
-
-## Step 2: Build the Static Export
+## Step 2: Build the Project
 
 Run the build command:
 
@@ -20,23 +14,24 @@ Run the build command:
 npm run build
 \`\`\`
 
-This will create an `out` directory with all static files.
+This will:
+1. Run the `delete-dynamic-routes.js` script to remove dynamic routes
+2. Build the static export to the `out` directory
 
 ## Step 3: Add PHP Files
 
-After building, make sure these PHP files are in your `out` directory:
+After building, add these PHP files to your `out` directory:
 
 1. `/bookings/cancel.php` - For handling booking cancellations
 2. `/bookings/index.php` - For redirecting to homepage
 3. `/api/submit-booking.php` - For handling form submissions
 4. `/admin/index.php`, `/admin/login.php`, `/admin/logout.php` - For admin interface
 
-## Step 4: Upload to Verpex
+## Step 4: Upload to Hosting
 
-1. Connect to your Verpex hosting via FTP
-2. Navigate to your public_html directory
-3. Upload all files from the `out` directory
-4. Set proper permissions:
+1. Connect to your hosting via FTP
+2. Upload all files from the `out` directory to your public_html folder
+3. Set proper permissions:
    - Directories: 755 (drwxr-xr-x)
    - Files: 644 (rw-r--r--)
    - PHP files: 644 (rw-r--r--)
@@ -44,15 +39,14 @@ After building, make sure these PHP files are in your `out` directory:
 ## Step 5: Set Up Database
 
 1. Log in to cPanel
-2. Go to MySQL Databases
-3. Create a new database (e.g., jamiesautocare_db)
-4. Create a new user with a strong password
-5. Add the user to the database with all privileges
-6. Import the `database-setup.sql` file or run the SQL commands
+2. Create a new MySQL database
+3. Create a database user with a strong password
+4. Add the user to the database with all privileges
+5. Import the `database-setup.sql` file
 
 ## Step 6: Update Configuration
 
-Edit the following files to update database credentials:
+Edit these PHP files to update database credentials:
 - `api/submit-booking.php`
 - `bookings/cancel.php`
 - `admin/index.php`
@@ -66,8 +60,8 @@ Replace these placeholders:
 
 ## Step 7: Test Your Website
 
-1. Visit your website at your domain name
+1. Visit your website
 2. Test the booking form
 3. Test the booking cancellation link
-4. Log in to the admin area at `/admin/login.php`
+4. Log in to the admin area
 5. Verify emails are being sent
