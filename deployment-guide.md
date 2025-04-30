@@ -1,12 +1,19 @@
 # Deployment Guide for Jamie's Auto Care Website
 
-## Step 1: Prepare for Static Export
+## Overview
 
-1. Make sure you have the `clean-routes.js` script in your project root
-2. Ensure your `next.config.js` has `output: "export"` configuration
-3. Verify that your `package.json` has the prebuild script: `"prebuild": "node clean-routes.js"`
+This is a static website with PHP backend for form handling. The build process creates a static site that can be deployed to any web hosting service that supports PHP.
 
-## Step 2: Build the Project
+## Deployment Steps
+
+### 1. Prepare Your Hosting Environment
+
+Make sure your hosting environment meets these requirements:
+- PHP 7.4 or higher
+- MySQL database (optional, for storing bookings)
+- Email functionality enabled
+
+### 2. Build the Website
 
 Run the build command:
 
@@ -14,54 +21,44 @@ Run the build command:
 npm run build
 \`\`\`
 
-This will:
-1. Run the `clean-routes.js` script to remove dynamic routes
-2. Build the static export to the `out` directory
+This will create an `out` directory with all the static files.
 
-## Step 3: Add PHP Files
+### 3. Upload Files to Your Hosting
 
-After building, add these PHP files to your `out` directory:
+Upload all files from the `out` directory to your web hosting's public directory (usually `public_html` or `www`).
 
-1. `/bookings/cancel.php` - For handling booking cancellations
-2. `/bookings/index.php` - For redirecting to homepage
-3. `/api/submit-booking.php` - For handling form submissions
-4. `/admin/index.php`, `/admin/login.php`, `/admin/logout.php` - For admin interface
+### 4. Configure PHP Files
 
-## Step 4: Upload to Hosting
+Edit these PHP files to update with your information:
 
-1. Connect to your hosting via FTP
-2. Upload all files from the `out` directory to your public_html folder
-3. Set proper permissions:
-   - Directories: 755 (drwxr-xr-x)
-   - Files: 644 (rw-r--r--)
-   - PHP files: 644 (rw-r--r--)
+- `api/submit-booking.php`: Update the admin email address
+- `admin/login.php`: Update the admin password
+- If using a database, update the database connection details in all PHP files
 
-## Step 5: Set Up Database
+### 5. Set Up Database (Optional)
 
-1. Log in to cPanel
-2. Create a new MySQL database
-3. Create a database user with a strong password
-4. Add the user to the database with all privileges
-5. Import the `database-setup.sql` file
+If you want to store bookings in a database:
 
-## Step 6: Update Configuration
+1. Create a new MySQL database
+2. Import the `database-setup.sql` file (you'll need to create this)
+3. Update the database connection details in the PHP files
 
-Edit these PHP files to update database credentials:
-- `api/submit-booking.php`
-- `bookings/cancel.php`
-- `admin/index.php`
-- `admin/login.php`
-
-Replace these placeholders:
-- `YOUR_DB_USER`
-- `YOUR_DB_PASSWORD`
-- `YOUR_DB_NAME`
-- `YOUR_ADMIN_PASSWORD`
-
-## Step 7: Test Your Website
+### 6. Test Your Website
 
 1. Visit your website
 2. Test the booking form
-3. Test the booking cancellation link
-4. Log in to the admin area
-5. Verify emails are being sent
+3. Test the admin login
+
+## Troubleshooting
+
+- If forms aren't working, check that PHP is properly configured
+- If emails aren't being sent, check your hosting's email settings
+- If you see 404 errors, make sure your .htaccess file is uploaded and working
+
+## Maintenance
+
+To update the website:
+
+1. Make changes to the source files
+2. Run `npm run build` again
+3. Upload the updated files to your hosting
