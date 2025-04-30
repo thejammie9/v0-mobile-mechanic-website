@@ -104,7 +104,8 @@ const sendCustomerConfirmation = async (booking: BookingData) => {
   try {
     const transporter = createTransporter()
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-    const cancellationUrl = `${appUrl}/bookings/${booking.id}/cancel?token=${booking.cancellationToken}`
+    // Use PHP cancellation page instead of dynamic route
+    const cancellationUrl = `${appUrl}/bookings/cancel.php?id=${booking.id}&token=${booking.cancellationToken}`
 
     await transporter.sendMail({
       from: `"Jamie's Auto Care" <${process.env.SMTP_USER || "contact@jamiesautocare.com"}>`,

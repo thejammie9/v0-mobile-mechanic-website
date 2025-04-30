@@ -58,12 +58,12 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "latest",
-    "nodemailer": "latest",
-    "crypto": "latest",
     "mysql2": "latest",
     "fs": "latest",
     "path": "latest",
-    "child_process": "latest"
+    "child_process": "latest",
+    "nodemailer": "latest",
+    "crypto": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

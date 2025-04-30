@@ -2,51 +2,34 @@
 
 This guide will help you deploy the static version of your Next.js website to Verpex hosting.
 
-## Step 1: Prepare Your Project
+## Step 1: Remove Dynamic Routes
 
-1. Make sure you have the pre-build cleanup script in place:
-   - `scripts/pre-build-cleanup.js` - Removes dynamic routes before building
+Before building, run the script to remove dynamic routes:
 
-2. Update your package.json scripts:
-   \`\`\`json
-   "scripts": {
-     "dev": "next dev",
-     "build": "node scripts/pre-build-cleanup.js && next build",
-     "start": "next start",
-     "lint": "next lint"
-   }
-   \`\`\`
+\`\`\`bash
+node remove-dynamic-routes.js
+\`\`\`
+
+This will delete any dynamic route folders that are incompatible with static export.
 
 ## Step 2: Build the Static Export
 
-1. Run the build command:
-   \`\`\`bash
-   npm run build
-   \`\`\`
-   This will:
-   - Remove dynamic routes before building
-   - Create an `out` directory with all static files
+Run the build command:
 
+\`\`\`bash
+npm run build
+\`\`\`
 
-## Step 3: Prepare Additional Files
+This will create an `out` directory with all static files.
 
-1. Create the following directory structure in your `out` directory:
-   - `/api` - For API endpoints
-   - `/bookings` - For booking cancellation
-   - `/admin` - For admin interface
-   - `/js` - For JavaScript files
-   - `/css` - For CSS files
+## Step 3: Add PHP Files
 
-2. Copy the following files to your `out` directory:
-   - `.htaccess` (root level)
-   - `api/submit-booking.php`
-   - `bookings/cancel.php`
-   - `bookings/index.php`
-   - `js/booking-form-static.js`
-   - `admin/index.php`
-   - `admin/login.php`
-   - `admin/logout.php`
-   - `css/admin.css`
+After building, make sure these PHP files are in your `out` directory:
+
+1. `/bookings/cancel.php` - For handling booking cancellations
+2. `/bookings/index.php` - For redirecting to homepage
+3. `/api/submit-booking.php` - For handling form submissions
+4. `/admin/index.php`, `/admin/login.php`, `/admin/logout.php` - For admin interface
 
 ## Step 4: Upload to Verpex
 
@@ -69,17 +52,17 @@ This guide will help you deploy the static version of your Next.js website to Ve
 
 ## Step 6: Update Configuration
 
-1. Edit the following files to update database credentials:
-   - `api/submit-booking.php`
-   - `bookings/cancel.php`
-   - `admin/index.php`
-   - `admin/login.php`
+Edit the following files to update database credentials:
+- `api/submit-booking.php`
+- `bookings/cancel.php`
+- `admin/index.php`
+- `admin/login.php`
 
-2. Replace these placeholders:
-   - `YOUR_DB_USER`
-   - `YOUR_DB_PASSWORD`
-   - `YOUR_DB_NAME`
-   - `YOUR_ADMIN_PASSWORD`
+Replace these placeholders:
+- `YOUR_DB_USER`
+- `YOUR_DB_PASSWORD`
+- `YOUR_DB_NAME`
+- `YOUR_ADMIN_PASSWORD`
 
 ## Step 7: Test Your Website
 
