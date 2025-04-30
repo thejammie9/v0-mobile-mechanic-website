@@ -2,9 +2,9 @@
 
 ## Step 1: Prepare for Static Export
 
-1. Make sure you have the `delete-dynamic-routes.js` script in your project root
+1. Make sure you have the `clean-routes.js` script in your project root
 2. Ensure your `next.config.js` has `output: "export"` configuration
-3. Verify that your `package.json` has the prebuild script: `"prebuild": "node delete-dynamic-routes.js"`
+3. Verify that your `package.json` has the prebuild script: `"prebuild": "node clean-routes.js"`
 
 ## Step 2: Build the Project
 
@@ -15,7 +15,7 @@ npm run build
 \`\`\`
 
 This will:
-1. Run the `delete-dynamic-routes.js` script to remove dynamic routes
+1. Run the `clean-routes.js` script to remove dynamic routes
 2. Build the static export to the `out` directory
 
 ## Step 3: Add PHP Files
