@@ -4,7 +4,7 @@ This guide will help you deploy the static version of your Next.js website to Ve
 
 ## Step 1: Build the Static Export
 
-1. Update your `next.config.js` file with the provided configuration
+1. Make sure your `next.config.js` file has the updated configuration with `exportPathMap`
 2. Run the build command:
    \`\`\`
    npm run build
@@ -13,21 +13,30 @@ This guide will help you deploy the static version of your Next.js website to Ve
 
 ## Step 2: Prepare Additional Files
 
-1. Copy the following files to your `out` directory:
+1. Create the following directory structure in your `out` directory:
+   - `/api` - For API endpoints
+   - `/bookings` - For booking cancellation
+   - `/admin` - For admin interface
+   - `/js` - For JavaScript files
+   - `/css` - For CSS files
+
+2. Copy the following files to your `out` directory:
    - `.htaccess` (root level)
    - `api/submit-booking.php`
+   - `bookings/cancel.php`
+   - `bookings/index.php`
    - `js/booking-form-static.js`
    - `admin/index.php`
    - `admin/login.php`
    - `admin/logout.php`
    - `css/admin.css`
 
-2. Add a script tag to load the booking form JavaScript in your HTML:
+3. Add a script tag to load the booking form JavaScript in your HTML:
    ```html
    <script src="/js/booking-form-static.js"></script>
    \`\`\`
 
-3. Update the booking form HTML to include an ID and status message container:
+4. Update the booking form HTML to include an ID and status message container:
    ```html
    <form id="booking-form" class="...">
      <!-- Form fields -->
@@ -58,6 +67,7 @@ This guide will help you deploy the static version of your Next.js website to Ve
 
 1. Edit the following files to update database credentials:
    - `api/submit-booking.php`
+   - `bookings/cancel.php`
    - `admin/index.php`
    - `admin/login.php`
 
@@ -71,8 +81,9 @@ This guide will help you deploy the static version of your Next.js website to Ve
 
 1. Visit your website at your domain name
 2. Test the booking form
-3. Log in to the admin area at `/admin/login.php`
-4. Verify emails are being sent
+3. Test the booking cancellation link
+4. Log in to the admin area at `/admin/login.php`
+5. Verify emails are being sent
 
 ## Troubleshooting
 
