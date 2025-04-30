@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "out",
-  "framework": "nextjs"
+  "builds": [{ "src": "static/**", "use": "@vercel/static" }],
+  "routes": [{ "src": "/(.*)", "dest": "/static/$1" }, { "src": "/", "dest": "/static/index.html" }]
 }
