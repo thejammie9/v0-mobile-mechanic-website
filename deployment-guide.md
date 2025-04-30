@@ -2,18 +2,38 @@
 
 This guide will help you deploy the static version of your Next.js website to Verpex hosting.
 
-## Step 1: Build the Static Export
+## Step 1: Prepare Your Project
 
-1. Make sure your `next.config.js` file has the updated configuration
-2. Run the build command:
+1. Make sure you have the scripts folder with:
+   - `prepare-static-build.js` - Removes dynamic routes before building
+   - `restore-dynamic-routes.js` - Restores dynamic routes after building
+
+2. Update your package.json scripts:
+   \`\`\`json
+   "scripts": {
+     "dev": "next dev",
+     "prebuild": "node scripts/prepare-static-build.js",
+     "build": "next build",
+     "postbuild": "node scripts/restore-dynamic-routes.js",
+     "start": "next start",
+     "lint": "next lint"
+   }
+   \`\`\`
+
+## Step 2: Build the Static Export
+
+1. Run the build command:
    \`\`\`bash
    npm run build
    \`\`\`
-   This will create an `out` directory with all static files and remove any dynamic routes
+   This will:
+   - Remove dynamic routes before building
+   - Create an `out` directory with all static files
+   - Restore dynamic routes after building (for development)
 
-## Step 2: Prepare Additional Files
+## Step 3: Prepare Additional Files
 
-1. Create the following directory structure in your `out` directory if they don't exist:
+1. Create the following directory structure in your `out` directory:
    - `/api` - For API endpoints
    - `/bookings` - For booking cancellation
    - `/admin` - For admin interface
@@ -44,7 +64,7 @@ This guide will help you deploy the static version of your Next.js website to Ve
    <div id="form-status"></div>
    \`\`\`
 
-## Step 3: Upload to Verpex
+## Step 4: Upload to Verpex
 
 1. Connect to your Verpex hosting via FTP
 2. Navigate to your public_html directory
@@ -54,7 +74,7 @@ This guide will help you deploy the static version of your Next.js website to Ve
    - Files: 644 (rw-r--r--)
    - PHP files: 644 (rw-r--r--)
 
-## Step 4: Set Up Database
+## Step 5: Set Up Database
 
 1. Log in to cPanel
 2. Go to MySQL Databases
@@ -63,7 +83,7 @@ This guide will help you deploy the static version of your Next.js website to Ve
 5. Add the user to the database with all privileges
 6. Import the `database-setup.sql` file or run the SQL commands
 
-## Step 5: Update Configuration
+## Step 6: Update Configuration
 
 1. Edit the following files to update database credentials:
    - `api/submit-booking.php`
@@ -77,7 +97,7 @@ This guide will help you deploy the static version of your Next.js website to Ve
    - `YOUR_DB_NAME`
    - `YOUR_ADMIN_PASSWORD`
 
-## Step 6: Test Your Website
+## Step 7: Test Your Website
 
 1. Visit your website at your domain name
 2. Test the booking form

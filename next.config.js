@@ -12,8 +12,6 @@ const nextConfig = {
   },
   trailingSlash: true,
   assetPrefix: "/",
-  // Remove any dynamic routes from the build
-  distDir: "out",
 }
 
 module.exports = nextConfig
