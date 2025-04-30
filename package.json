@@ -60,7 +60,9 @@
     "zod": "latest",
     "nodemailer": "latest",
     "crypto": "latest",
-    "mysql2": "latest"
+    "mysql2": "latest",
+    "fs": "latest",
+    "path": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

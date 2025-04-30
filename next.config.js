@@ -12,15 +12,8 @@ const nextConfig = {
   },
   trailingSlash: true,
   assetPrefix: "/",
-  // Exclude dynamic routes from the export
-  exportPathMap: async () => ({
-    "/": { page: "/" },
-    "/admin/login": { page: "/admin/login" },
-    "/admin/bookings": { page: "/admin/bookings" },
-    "/admin/settings": { page: "/admin/settings" },
-    "/admin/logout": { page: "/admin/logout" },
-    // Add any other static routes you need
-  }),
+  // Remove any dynamic routes from the build
+  distDir: "out",
 }
 
 module.exports = nextConfig

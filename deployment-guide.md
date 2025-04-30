@@ -4,16 +4,16 @@ This guide will help you deploy the static version of your Next.js website to Ve
 
 ## Step 1: Build the Static Export
 
-1. Make sure your `next.config.js` file has the updated configuration with `exportPathMap`
+1. Make sure your `next.config.js` file has the updated configuration
 2. Run the build command:
-   \`\`\`
+   \`\`\`bash
    npm run build
    \`\`\`
-3. This will create an `out` directory with all static files
+   This will create an `out` directory with all static files and remove any dynamic routes
 
 ## Step 2: Prepare Additional Files
 
-1. Create the following directory structure in your `out` directory:
+1. Create the following directory structure in your `out` directory if they don't exist:
    - `/api` - For API endpoints
    - `/bookings` - For booking cancellation
    - `/admin` - For admin interface
