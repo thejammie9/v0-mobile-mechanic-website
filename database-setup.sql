@@ -1,3 +1,4 @@
+-- Create the bookings table
 CREATE TABLE IF NOT EXISTS bookings (
   id VARCHAR(50) PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
