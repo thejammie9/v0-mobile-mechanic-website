@@ -2,7 +2,7 @@ import type React from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { Calendar, Settings, LogOut, Home, BarChart3 } from "lucide-react"
+import { Calendar, Settings, LogOut, Home, BarChart3, Users, FileText, Package } from "lucide-react"
 
 export default function AdminLayout({
   children,
@@ -40,6 +40,27 @@ export default function AdminLayout({
                 >
                   <Calendar className="h-4 w-4 mr-1" />
                   Bookings
+                </Link>
+                <Link
+                  href="/admin/customers"
+                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium hover:border-gray-300 hover:text-gray-200"
+                >
+                  <Users className="h-4 w-4 mr-1" />
+                  Customers
+                </Link>
+                <Link
+                  href="/admin/invoices"
+                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium hover:border-gray-300 hover:text-gray-200"
+                >
+                  <FileText className="h-4 w-4 mr-1" />
+                  Invoices
+                </Link>
+                <Link
+                  href="/admin/parts"
+                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium hover:border-gray-300 hover:text-gray-200"
+                >
+                  <Package className="h-4 w-4 mr-1" />
+                  Parts
                 </Link>
                 <Link
                   href="/admin/reports"

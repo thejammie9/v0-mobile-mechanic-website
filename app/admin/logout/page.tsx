@@ -2,29 +2,27 @@
 
 import { useEffect } from "react"
 import { logoutAdmin } from "@/app/actions/auth-actions"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function LogoutPage() {
+  const router = useRouter()
+
   useEffect(() => {
-    const logout = async () => {
+    const performLogout = async () => {
       await logoutAdmin()
-      // Redirect happens in the server action
+      // Use window.location for a full page refresh
+      window.location.href = "/admin/login"
     }
-    logout()
-  }, [])
+
+    performLogout()
+  }, [router])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Logging Out</CardTitle>
-          <CardDescription className="text-center">Please wait while we log you out...</CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        </CardContent>
-      </Card>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-96 text-center">
+        <h1 className="text-2xl font-bold mb-4">Logging Out</h1>
+        <p>Please wait while we log you out...</p>
+      </div>
     </div>
   )
 }

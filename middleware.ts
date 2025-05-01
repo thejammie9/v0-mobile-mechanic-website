@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 // Define paths that require authentication
-const PROTECTED_PATHS = ["/admin/bookings", "/admin/settings"]
+const PROTECTED_PATHS = ["/admin"]
 
 // Define paths that are excluded from authentication
 const PUBLIC_PATHS = ["/admin/login"]
@@ -15,15 +15,15 @@ export function middleware(request: NextRequest) {
 
   // Check if the path is protected
   const isProtectedPath = PROTECTED_PATHS.some((path) => pathname.startsWith(path))
-  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path))
+  const isPublicPath = PUBLIC_PATHS.some((path) => pathname === path)
 
-  // If it's not a protected path, allow the request
-  if (!isProtectedPath) {
+  // If it's a public path, allow the request
+  if (isPublicPath) {
     return NextResponse.next()
   }
 
-  // If it's a public path within the admin section, allow the request
-  if (isPublicPath) {
+  // If it's not a protected path, allow the request
+  if (!isProtectedPath) {
     return NextResponse.next()
   }
 
