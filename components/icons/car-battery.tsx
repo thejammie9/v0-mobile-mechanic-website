@@ -1,7 +1,26 @@
-export function CarBattery({ className = "h-10 w-10 text-blue-800" }: { className?: string }) {
+import type React from "react"
+
+export function CarBattery(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className={className}>
-      <path d="M80 96c0-17.7 14.3-32 32-32h64c17.7 0 32 14.3 32 32l96 0c0-17.7 14.3-32 32-32h64c17.7 0 32 14.3 32 32h16c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V160c0-35.3 28.7-64 64-64l16 0zm304 96c0-8.8-7.2-16-16-16s-16 7.2-16 16v32H320c-8.8 0-16 7.2-16 16s7.2 16 16 16h32v32c0 8.8 7.2 16 16 16s16-7.2 16-16V256h32c8.8 0 16-7.2 16-16s-7.2-16-16-16H384V192zM80 192c0-8.8 7.2-16 16-16h96c8.8 0 16 7.2 16 16s7.2 16 16 16s16-7.2 16-16s-7.2-16-16-16H128c-26.5 0-48 21.5-48 48V320c0 26.5 21.5 48 48 48h96c8.8 0 16-7.2 16-16s-7.2-16-16-16s-16-7.2-16-16s7.2-16 16-16H128c-8.8 0-16-7.2-16-16V256c0-8.8 7.2-16 16-16h96c8.8 0 16-7.2 16-16s-7.2-16-16-16s-16-7.2-16-16z" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <line x1="6" y1="10" x2="6" y2="14" />
+      <line x1="10" y1="10" x2="10" y2="14" />
+      <line x1="14" y1="10" x2="14" y2="14" />
+      <line x1="18" y1="10" x2="18" y2="14" />
+      <line x1="4" y1="4" x2="8" y2="4" />
+      <line x1="16" y1="4" x2="20" y2="4" />
     </svg>
   )
 }

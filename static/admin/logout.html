@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logging Out - Jamie's Auto Care</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid rgba(30, 58, 138, 0.3);
+            border-radius: 50%;
+            border-top-color: #1e3a8a;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Clear the auth token
+            sessionStorage.removeItem('admin_auth');
+            
+            // Redirect to login page after 1 second
+            setTimeout(() => {
+                window.location.href = '/admin/login.html';
+            }, 1000);
+        });
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex flex-col items-center justify-center">
+        <div class="spinner"></div>
+        <h1 class="text-xl font-medium">Logging out...</h1>
+    </div>
+</body>
+</html>

@@ -1,7 +1,26 @@
-export function BrakeDisc({ className = "h-10 w-10 text-blue-800" }: { className?: string }) {
+import type React from "react"
+
+export function BrakeDisc(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className={className}>
-      <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM256 128a128 128 0 1 0 0 256 128 128 0 1 0 0-256zM192 256a64 64 0 1 1 128 0 64 64 0 1 1 -128 0z" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+      <path d="M12 2v4" />
+      <path d="M12 18v4" />
+      <path d="M2 12h4" />
+      <path d="M18 12h4" />
     </svg>
   )
 }

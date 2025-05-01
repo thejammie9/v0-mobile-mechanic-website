@@ -3,6 +3,10 @@ export default function BookingsPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-4">Bookings</h1>
       <p>Please check your email for booking information.</p>
+      <p className="mt-4">
+        If you need to make changes to your booking, please contact us at 07463451967 or email us at
+        contact@jamiesautocare.com.
+      </p>
     </div>
-  );
+  )
 }

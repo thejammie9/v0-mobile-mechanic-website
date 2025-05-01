@@ -3,22 +3,53 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, RefreshCw } from "lucide-react"
-import { getBookings, updateBookingStatus, type BookingData } from "@/app/actions/booking-actions"
+
+// Define the booking data type
+type BookingData = {
+  id: string
+  name: string
+  email: string
+  phone: string
+  vehicle: string
+  issue: string
+  date: string
+  timeSlot: string
+  status: "pending" | "confirmed" | "completed" | "cancelled"
+  createdAt: string
+}
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingData[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<string>("")
+
+  // Load bookings on component mount
+  useEffect(() => {
+    loadBookings()
+  }, [statusFilter])
 
   const loadBookings = async () => {
     setLoading(true)
     try {
-      const data = await getBookings()
-      setBookings(data)
+      // Build query string
+      let url = "/api/bookings"
+      if (statusFilter) {
+        url += `?status=${statusFilter}`
+      }
+
+      const response = await fetch(url)
+      const data = await response.json()
+
+      if (data.success) {
+        setBookings(data.bookings)
+      } else {
+        console.error("Error loading bookings:", data.message)
+      }
     } catch (error) {
       console.error("Error loading bookings:", error)
     } finally {
@@ -26,20 +57,28 @@ export default function BookingsPage() {
     }
   }
 
-  useEffect(() => {
-    loadBookings()
-  }, [])
-
   const handleStatusChange = async (id: string, status: BookingData["status"]) => {
     setUpdating(id)
+
     try {
-      const result = await updateBookingStatus(id, status)
-      if (result.success) {
-        // Update local state
+      const response = await fetch(`/api/bookings/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update the booking in the state
         setBookings((prev) => prev.map((booking) => (booking.id === id ? { ...booking, status } : booking)))
+      } else {
+        console.error("Error updating booking status:", data.message)
       }
     } catch (error) {
-      console.error("Error updating status:", error)
+      console.error("Error updating booking status:", error)
     } finally {
       setUpdating(null)
     }
@@ -88,10 +127,24 @@ export default function BookingsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Booking Requests</h1>
-        <Button variant="outline" size="sm" onClick={loadBookings} disabled={loading}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          <span className="ml-2">Refresh</span>
-        </Button>
+        <div className="flex items-center space-x-4">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="confirmed">Confirmed</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={loadBookings} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            <span className="ml-2">Refresh</span>
+          </Button>
+        </div>
       </div>
 
       <Card>

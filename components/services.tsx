@@ -1,49 +1,25 @@
-import { Wrench, AlertTriangle, Car, Cog } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CarBattery } from "./icons/car-battery"
-import { BrakeDisc } from "./icons/brake-disc"
-import { OilCan } from "./icons/oil-can"
+import { DiscIcon as BrakeDisc, BatteryIcon as CarBattery, SprayCanIcon as OilCan, Wrench } from "lucide-react"
 
 const services = [
   {
     title: "Engine Repair",
     description: "Comprehensive engine diagnostics and repairs for all makes and models.",
-    icon: <Wrench className="h-10 w-10 text-blue-800" />,
+    icon: Wrench,
   },
   {
     title: "Brake Servicing",
     description: "Complete brake system inspection, repair and replacement.",
-    icon: <BrakeDisc />, // Custom brake disc icon
-  },
-  {
-    title: "Diagnostics",
-    description: "Advanced computer diagnostics to identify issues quickly and accurately.",
-    icon: <AlertTriangle className="h-10 w-10 text-blue-800" />,
+    icon: BrakeDisc,
   },
   {
     title: "Battery Replacement",
     description: "On-the-spot battery testing and replacement services.",
-    icon: <CarBattery />, // Custom car battery icon
-  },
-  {
-    title: "MOT Preparation",
-    description: "Pre-MOT checks and necessary repairs to ensure your vehicle passes.",
-    icon: <AlertTriangle className="h-10 w-10 text-blue-800" />,
+    icon: CarBattery,
   },
   {
     title: "Oil Changes",
-    description: "Quick and clean oil and filter changes using quality products.",
-    icon: <OilCan />, // Custom oil can icon
-  },
-  {
-    title: "Electrical Systems",
-    description: "Troubleshooting and repair of all vehicle electrical systems.",
-    icon: <Cog className="h-10 w-10 text-blue-800" />,
-  },
-  {
-    title: "Mobile Servicing",
     description: "Full vehicle servicing performed at your home or workplace.",
-    icon: <Car className="h-10 w-10 text-blue-800" />,
+    icon: OilCan,
   },
 ]
 
@@ -54,15 +30,16 @@ export default function Services() {
         <h2 className="text-3xl font-bold text-center mb-12 text-blue-900">Our Services</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.map((service, index) => (
-            <Card key={index} className="border-gray-200 hover:shadow-lg transition-shadow duration-300">
-              <CardHeader className="flex flex-col items-center pb-2">
-                {service.icon}
-                <CardTitle className="mt-4 text-xl text-center">{service.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-center text-gray-600">{service.description}</CardDescription>
-              </CardContent>
-            </Card>
+            <div
+              key={index}
+              className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300"
+            >
+              <div className="flex flex-col items-center">
+                <service.icon className="h-10 w-10 text-blue-800 mb-4" />
+                <h3 className="text-xl font-bold mb-2 text-center">{service.title}</h3>
+                <p className="text-center text-gray-600">{service.description}</p>
+              </div>
+            </div>
           ))}
         </div>
       </div>

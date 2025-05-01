@@ -1,33 +1,54 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+// Define paths that require authentication
+const PROTECTED_PATHS = ["/admin/bookings", "/admin/settings"]
+
+// Define paths that are excluded from authentication
+const PUBLIC_PATHS = ["/admin/login"]
+
 export function middleware(request: NextRequest) {
-  // Check if the request is for the admin area
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    // Skip authentication for the login page
-    if (request.nextUrl.pathname === "/admin/login") {
-      return NextResponse.next()
-    }
+  const { pathname } = request.nextUrl
 
-    // Check if the user is authenticated
-    const authToken = request.cookies.get("admin_auth")?.value
+  // Check if the path is protected
+  const isProtectedPath = PROTECTED_PATHS.some((path) => pathname.startsWith(path))
+  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path))
 
-    // If not authenticated, redirect to login
-    if (!authToken) {
-      return NextResponse.redirect(new URL("/admin/login", request.url))
-    }
-
-    // Simple token validation (in production, use a proper JWT validation)
-    const expectedToken = process.env.ADMIN_AUTH_TOKEN
-
-    if (authToken !== expectedToken) {
-      return NextResponse.redirect(new URL("/admin/login", request.url))
-    }
+  // If it's not a protected path, allow the request
+  if (!isProtectedPath) {
+    return NextResponse.next()
   }
 
+  // If it's a public path within the admin section, allow the request
+  if (isPublicPath) {
+    return NextResponse.next()
+  }
+
+  // Check for the auth cookie
+  const authCookie = request.cookies.get("admin_auth")?.value
+
+  // If there's no auth cookie, redirect to login
+  if (!authCookie) {
+    const url = new URL("/admin/login", request.url)
+    url.searchParams.set("from", pathname)
+    return NextResponse.redirect(url)
+  }
+
+  // Verify the auth cookie (in a real app, you'd verify against a token)
+  const isValidToken = authCookie === process.env.ADMIN_AUTH_TOKEN
+
+  // If the token is invalid, redirect to login
+  if (!isValidToken) {
+    const url = new URL("/admin/login", request.url)
+    url.searchParams.set("from", pathname)
+    return NextResponse.redirect(url)
+  }
+
+  // Allow the request
   return NextResponse.next()
 }
 
+// Configure the middleware to run only on specific paths
 export const config = {
-  matcher: "/admin/:path*",
+  matcher: ["/admin/:path*"],
 }

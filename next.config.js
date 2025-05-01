@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "export",
-  // Disable all checks to avoid build errors
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -9,18 +7,12 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    domains: ["placeholder.com"],
     unoptimized: true,
   },
-  trailingSlash: true,
-  // Disable all experimental features
+  // Enable server actions
   experimental: {
-    // Disable any experimental features
-  },
-  // Disable webpack optimizations
-  webpack: (config) => {
-    // Disable optimization
-    config.optimization.minimize = false;
-    return config;
+    serverActions: true,
   },
 }
 

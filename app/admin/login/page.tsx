@@ -23,14 +23,11 @@ export default function AdminLogin() {
     setError("")
 
     try {
-      const formData = new FormData()
-      formData.append("password", password)
-
-      const result = await loginAdmin(formData)
+      const result = await loginAdmin(new FormData(e.target as HTMLFormElement))
 
       if (result.success) {
-        // Redirect to admin dashboard
         router.push("/admin/bookings")
+        router.refresh()
       } else {
         setError(result.error || "Invalid password")
       }
@@ -61,6 +58,7 @@ export default function AdminLogin() {
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

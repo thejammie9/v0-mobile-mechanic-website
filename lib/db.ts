@@ -42,21 +42,14 @@ export async function initDatabase() {
       )
     `)
 
-    // Check if cancellation_token column exists, add it if it doesn't
-    try {
-      await query(`
-        SELECT cancellation_token FROM bookings LIMIT 1
-      `)
-    } catch (error) {
-      // Column doesn't exist, add it
-      await query(`
-        ALTER TABLE bookings ADD COLUMN cancellation_token VARCHAR(100)
-      `)
-    }
-
     console.log("Database initialized successfully")
   } catch (error) {
     console.error("Failed to initialize database:", error)
     throw error
   }
+}
+
+// Initialize database on server start
+if (process.env.NODE_ENV !== "test") {
+  initDatabase().catch(console.error)
 }

@@ -1,52 +1,92 @@
-"use client"
-
-import { Card, CardContent } from "@/components/ui/card"
-import { useEffect } from "react"
-
 export default function TrustpilotWidget() {
-  useEffect(() => {
-    // This will trigger the Trustpilot script to load the widget
-    if (window.Trustpilot) {
-      window.Trustpilot.loadFromElement(document.getElementById("trustpilot-widget-container"))
-    }
-  }, [])
-
   return (
     <section className="py-16 bg-white" id="reviews">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12 text-blue-900">Customer Reviews</h2>
 
-        <Card className="max-w-4xl mx-auto">
-          <CardContent className="p-6">
-            {/* Trustpilot Widget */}
-            <div
-              id="trustpilot-widget-container"
-              className="trustpilot-widget"
-              data-locale="en-GB"
-              data-template-id="53aa8807dec7e10d38f59f32"
-              data-businessunit-id="YOUR_BUSINESS_UNIT_ID"
-              data-style-height="150px"
-              data-style-width="100%"
-              data-theme="light"
+        <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+          {/* Trustpilot Widget */}
+          <div className="text-center mb-8">
+            <a
+              href="https://uk.trustpilot.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-[#00b67a] text-white px-4 py-2 rounded font-bold"
             >
-              <a href="https://uk.trustpilot.com/review/jamiesautocare.com" target="_blank" rel="noopener noreferrer">
-                Trustpilot
-              </a>
-            </div>
+              See our reviews on Trustpilot
+            </a>
+          </div>
 
-            {/* Fallback for when Trustpilot script is not loaded */}
-            <div className="text-center mt-4">
-              <a
-                href="https://uk.trustpilot.com/review/jamiesautocare.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block bg-[#00b67a] text-white px-4 py-2 rounded font-bold"
+          {/* Review Form */}
+          <div id="review-form-container">
+            <h3 className="text-2xl font-bold text-center mb-6">Leave a Review</h3>
+
+            <form id="review-form" className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="name" className="block font-medium">
+                  Your Name
+                </label>
+                <input id="name" name="name" className="w-full px-3 py-2 border border-gray-300 rounded-md" required />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block font-medium">Your Rating</label>
+                <div className="flex space-x-1">
+                  <button type="button" className="star-rating" data-rating="1">
+                    ★
+                  </button>
+                  <button type="button" className="star-rating" data-rating="2">
+                    ★
+                  </button>
+                  <button type="button" className="star-rating" data-rating="3">
+                    ★
+                  </button>
+                  <button type="button" className="star-rating" data-rating="4">
+                    ★
+                  </button>
+                  <button type="button" className="star-rating" data-rating="5">
+                    ★
+                  </button>
+                </div>
+                <input type="hidden" id="rating" name="rating" value="0" />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="review" className="block font-medium">
+                  Your Review
+                </label>
+                <textarea
+                  id="review"
+                  name="review"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                ></textarea>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
               >
-                See our reviews on Trustpilot
-              </a>
+                Submit Review
+              </button>
+            </form>
+          </div>
+
+          <div id="review-success" className="hidden">
+            <div className="bg-green-50 border-green-200 border p-4 rounded-md">
+              <div className="flex">
+                <svg className="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <div>
+                  <h4 className="text-green-800 font-bold">Thank You!</h4>
+                  <p className="text-green-700">Your review has been submitted. We appreciate your feedback!</p>
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </section>
   )

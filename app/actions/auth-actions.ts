@@ -1,6 +1,7 @@
 "use server"
 
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
 export async function loginAdmin(formData: FormData) {
   const password = formData.get("password") as string
@@ -29,5 +30,5 @@ export async function loginAdmin(formData: FormData) {
 export async function logoutAdmin() {
   // Delete the auth cookie
   cookies().delete("admin_auth")
-  return { success: true }
+  redirect("/admin/login")
 }
