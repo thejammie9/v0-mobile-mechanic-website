@@ -1,62 +1,53 @@
 "use server"
 
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
-// Default admin credentials for testing - REMOVE BEFORE PRODUCTION
+// Default admin password for testing
 const DEFAULT_ADMIN_PASSWORD = "admin123"
-const DEFAULT_AUTH_TOKEN = "testing_token_123456789"
+const DEFAULT_ADMIN_TOKEN = "test_admin_token_for_development_only"
 
 export async function loginAdmin(formData: FormData) {
-  try {
-    const password = formData.get("password") as string
+  const password = formData.get("password") as string
 
-    if (!password) {
-      return { success: false, error: "Password is required" }
-    }
+  // Check if password matches environment variable or default password
+  const isValidPassword = password === process.env.ADMIN_PASSWORD || password === DEFAULT_ADMIN_PASSWORD
 
-    // Check if using default admin password for testing
-    if (password === DEFAULT_ADMIN_PASSWORD) {
-      // Set a testing auth cookie
-      cookies().set("admin_auth", DEFAULT_AUTH_TOKEN, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24, // 1 day
-        path: "/",
-      })
-
-      return { success: true, message: "Logged in with default admin account" }
-    }
-
-    // Regular authentication with environment variable
-    const correctPassword = process.env.ADMIN_PASSWORD
-
-    if (password === correctPassword) {
-      // Set auth cookie with the server-side token
-      const token = process.env.ADMIN_AUTH_TOKEN || "default_token"
-
-      // Set the cookie
-      cookies().set("admin_auth", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24, // 1 day
-        path: "/",
-      })
-
-      return { success: true, message: "Logged in with environment variable" }
-    }
-
-    return { success: false, error: "Invalid password" }
-  } catch (error) {
-    console.error("Login error:", error)
+  if (!isValidPassword) {
     return {
       success: false,
-      error: `Authentication error: ${error instanceof Error ? error.message : String(error)}`,
+      message: "Invalid password",
     }
+  }
+
+  // Set admin auth cookie
+  const token = process.env.ADMIN_AUTH_TOKEN || DEFAULT_ADMIN_TOKEN
+
+  cookies().set("admin_auth", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24, // 1 day
+    path: "/",
+  })
+
+  return {
+    success: true,
+    message: "Login successful",
   }
 }
 
 export async function logoutAdmin() {
-  // Delete the auth cookie
   cookies().delete("admin_auth")
-  return { success: true }
+  redirect("/admin/login")
+}
+
+export async function checkAdminAuth() {
+  const token = cookies().get("admin_auth")?.value
+
+  if (!token) {
+    return false
+  }
+
+  // Check if token matches environment variable or default token
+  return token === process.env.ADMIN_AUTH_TOKEN || token === DEFAULT_ADMIN_TOKEN
 }

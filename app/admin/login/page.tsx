@@ -1,102 +1,100 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { loginAdmin } from "@/app/actions/auth-actions"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { AlertCircle } from "lucide-react"
 
-export default function AdminLogin() {
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState("")
-  const router = useRouter()
+export default function AdminLoginPage() {
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-    setDebugInfo("Submitting form...")
+  async function handleSubmit(formData: FormData) {
+    setIsLoading(true)
+    setError(null)
 
     try {
-      // Create a FormData object
-      const formData = new FormData()
-      formData.append("password", password)
-
-      // Call the server action
-      setDebugInfo("Calling loginAdmin...")
       const result = await loginAdmin(formData)
-      setDebugInfo(`Result: ${JSON.stringify(result)}`)
 
       if (result.success) {
-        setDebugInfo("Login successful, redirecting...")
-        // Force a hard navigation instead of client-side navigation
-        window.location.href = "/admin/bookings"
+        // Redirect to admin dashboard
+        window.location.href = "/admin"
       } else {
-        setError(result.error || "Invalid password")
+        setError(result.message || "Login failed")
       }
     } catch (err) {
-      console.error("Login error:", err)
-      setError(`An error occurred: ${err instanceof Error ? err.message : String(err)}`)
+      setError("An unexpected error occurred")
+      console.error(err)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-blue-900">Admin Login</h1>
-          <p className="mt-2 text-gray-600">Enter your password to access the admin dashboard</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
+          <CardDescription className="text-center">Enter your password to access the admin dashboard</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-md mb-6">
-            <p>{error}</p>
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-700">
+                  <strong>Testing Mode:</strong> Use password "admin123" to login
+                </p>
+              </div>
+            </div>
           </div>
-        )}
 
-        {/* Testing credentials notice */}
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-md mb-6">
-          <p>
-            <strong>For testing:</strong> Use password <code className="bg-blue-100 px-1 rounded">admin123</code>
+          <form action={handleSubmit}>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  placeholder="Enter your password"
+                  disabled={isLoading}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Logging in..." : "Login"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+        <CardFooter className="text-center text-sm text-gray-500">
+          <p className="w-full">
+            Return to{" "}
+            <a href="/" className="text-blue-600 hover:underline">
+              website
+            </a>
           </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        {/* Debug information - remove in production */}
-        {debugInfo && (
-          <div className="mt-4 p-2 bg-gray-100 rounded text-xs font-mono">
-            <p>Debug: {debugInfo}</p>
-          </div>
-        )}
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   )
 }

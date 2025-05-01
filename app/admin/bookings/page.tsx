@@ -1,100 +1,821 @@
+"use client"
+
+import { useState } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Calendar, CheckCircle, Clock, Filter, Search, XCircle, AlertCircle, BarChart3, Car, Users } from "lucide-react"
+import { AdminWarningBanner } from "@/components/admin-warning-banner"
+
+// Mock data for bookings
+const mockBookings = [
+  {
+    id: "booking_1651234567",
+    name: "John Smith",
+    email: "john@example.com",
+    phone: "07463451967",
+    vehicle: "Ford Focus 2018",
+    issue: "Engine making strange noise when accelerating",
+    date: "2025-05-15",
+    timeSlot: "Morning (09:00 - 12:30)",
+    status: "pending",
+    createdAt: "2025-05-10T14:30:00Z",
+    notes: "",
+  },
+  {
+    id: "booking_1651234568",
+    name: "Sarah Johnson",
+    email: "sarah@example.com",
+    phone: "07712345678",
+    vehicle: "Audi A4 2020",
+    issue: "Brake pads need replacing, squeaking when braking",
+    date: "2025-05-16",
+    timeSlot: "Afternoon (13:30 - 17:30)",
+    status: "confirmed",
+    createdAt: "2025-05-11T09:15:00Z",
+    notes: "Customer requested text message before arrival",
+  },
+  {
+    id: "booking_1651234569",
+    name: "Michael Brown",
+    email: "michael@example.com",
+    phone: "07987654321",
+    vehicle: "Toyota Corolla 2017",
+    issue: "Battery keeps dying overnight",
+    date: "2025-05-14",
+    timeSlot: "Morning (09:00 - 12:30)",
+    status: "completed",
+    createdAt: "2025-05-09T16:45:00Z",
+    notes: "Replaced battery and tested charging system",
+    completedAt: "2025-05-14T11:30:00Z",
+    servicePerformed: "Battery replacement and electrical system check",
+    cost: "£120",
+  },
+  {
+    id: "booking_1651234570",
+    name: "Emma Wilson",
+    email: "emma@example.com",
+    phone: "07123456789",
+    vehicle: "Volkswagen Golf 2019",
+    issue: "Oil change and general service",
+    date: "2025-05-13",
+    timeSlot: "Afternoon (13:30 - 17:30)",
+    status: "completed",
+    createdAt: "2025-05-08T10:20:00Z",
+    notes: "Completed full service, replaced oil filter and air filter",
+    completedAt: "2025-05-13T15:45:00Z",
+    servicePerformed: "Full service with oil change",
+    cost: "£95",
+  },
+  {
+    id: "booking_1651234571",
+    name: "David Taylor",
+    email: "david@example.com",
+    phone: "07654321987",
+    vehicle: "BMW 3 Series 2021",
+    issue: "Check engine light is on",
+    date: "2025-05-17",
+    timeSlot: "Weekend (10:30 - 13:30)",
+    status: "cancelled",
+    createdAt: "2025-05-12T13:10:00Z",
+    notes: "Customer cancelled - found another mechanic",
+  },
+  {
+    id: "booking_1651234572",
+    name: "Lisa Anderson",
+    email: "lisa@example.com",
+    phone: "07891234567",
+    vehicle: "Nissan Qashqai 2018",
+    issue: "Suspension feels bouncy, possible shock absorber issue",
+    date: "2025-05-18",
+    timeSlot: "Morning (09:00 - 12:30)",
+    status: "confirmed",
+    createdAt: "2025-05-13T08:30:00Z",
+    notes: "",
+  },
+]
+
+// Dashboard statistics
+const dashboardStats = {
+  totalBookings: 24,
+  pendingBookings: 8,
+  confirmedBookings: 6,
+  completedBookings: 9,
+  cancelledBookings: 1,
+  revenueThisMonth: "£2,450",
+  averageJobValue: "£105",
+  mostCommonService: "Oil Change",
+}
+
 export default function AdminBookingsPage() {
+  const [bookings, setBookings] = useState(mockBookings)
+  const [activeTab, setActiveTab] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("")
+  const [dateFilter, setDateFilter] = useState("")
+  const [selectedBooking, setSelectedBooking] = useState(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false)
+  const [completionDetails, setCompletionDetails] = useState({
+    servicePerformed: "",
+    cost: "",
+    notes: "",
+  })
+
+  // Filter bookings based on active tab, search term, and filters
+  const filteredBookings = bookings.filter((booking) => {
+    // Filter by tab
+    if (activeTab !== "all" && booking.status !== activeTab) {
+      return false
+    }
+
+    // Filter by search term
+    if (
+      searchTerm &&
+      !booking.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !booking.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !booking.email.toLowerCase().includes(searchTerm.toLowerCase())
+    ) {
+      return false
+    }
+
+    // Filter by status
+    if (statusFilter && booking.status !== statusFilter) {
+      return false
+    }
+
+    // Filter by date
+    if (dateFilter && booking.date !== dateFilter) {
+      return false
+    }
+
+    return true
+  })
+
+  // Handle status change
+  const handleStatusChange = (bookingId, newStatus) => {
+    setBookings(bookings.map((booking) => (booking.id === bookingId ? { ...booking, status: newStatus } : booking)))
+  }
+
+  // Handle marking a booking as complete
+  const handleCompleteBooking = (booking) => {
+    setSelectedBooking(booking)
+    setIsCompleteModalOpen(true)
+  }
+
+  // Submit completion details
+  const submitCompletionDetails = () => {
+    if (selectedBooking) {
+      const updatedBookings = bookings.map((booking) =>
+        booking.id === selectedBooking.id
+          ? {
+              ...booking,
+              status: "completed",
+              completedAt: new Date().toISOString(),
+              servicePerformed: completionDetails.servicePerformed,
+              cost: completionDetails.cost,
+              notes: completionDetails.notes || booking.notes,
+            }
+          : booking,
+      )
+      setBookings(updatedBookings)
+      setIsCompleteModalOpen(false)
+      setCompletionDetails({ servicePerformed: "", cost: "", notes: "" })
+    }
+  }
+
+  // View booking details
+  const viewBookingDetails = (booking) => {
+    setSelectedBooking(booking)
+    setIsViewModalOpen(true)
+  }
+
+  // Get status badge
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "pending":
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+            Pending
+          </Badge>
+        )
+      case "confirmed":
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            Confirmed
+          </Badge>
+        )
+      case "completed":
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            Completed
+          </Badge>
+        )
+      case "cancelled":
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+            Cancelled
+          </Badge>
+        )
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
+
+  // Format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+  }
+
+  // Format time
+  const formatTime = (dateString) => {
+    return new Date(dateString).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h1 className="text-2xl font-bold mb-6">Booking Requests</h1>
+    <div className="space-y-6">
+      <AdminWarningBanner />
 
-      <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-md mb-6">
-        <p>
-          <strong>Test Mode:</strong> This is a placeholder for the bookings management page. In a real application,
-          this would display a list of booking requests from your database.
-        </p>
-      </div>
+      {/* Dashboard Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dashboard Overview</CardTitle>
+          <CardDescription>Summary of your booking activity</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4 flex items-center space-x-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Calendar className="h-6 w-6 text-blue-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Total Bookings</p>
+                  <h3 className="text-2xl font-bold">{dashboardStats.totalBookings}</h3>
+                </div>
+              </CardContent>
+            </Card>
 
-      <div className="border rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            <Card>
+              <CardContent className="p-4 flex items-center space-x-4">
+                <div className="bg-green-100 p-3 rounded-full">
+                  <CheckCircle className="h-6 w-6 text-green-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Completed Jobs</p>
+                  <h3 className="text-2xl font-bold">{dashboardStats.completedBookings}</h3>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4 flex items-center space-x-4">
+                <div className="bg-yellow-100 p-3 rounded-full">
+                  <Clock className="h-6 w-6 text-yellow-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Pending/Confirmed</p>
+                  <h3 className="text-2xl font-bold">
+                    {dashboardStats.pendingBookings + dashboardStats.confirmedBookings}
+                  </h3>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4 flex items-center space-x-4">
+                <div className="bg-purple-100 p-3 rounded-full">
+                  <BarChart3 className="h-6 w-6 text-purple-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Revenue (Month)</p>
+                  <h3 className="text-2xl font-bold">{dashboardStats.revenueThisMonth}</h3>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Car className="h-5 w-5 text-gray-500" />
+                    <p className="text-sm text-gray-500">Average Job Value</p>
+                  </div>
+                  <p className="font-semibold">{dashboardStats.averageJobValue}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-5 w-5 text-gray-500" />
+                    <p className="text-sm text-gray-500">Most Common Service</p>
+                  </div>
+                  <p className="font-semibold">{dashboardStats.mostCommonService}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="h-5 w-5 text-gray-500" />
+                    <p className="text-sm text-gray-500">Cancellation Rate</p>
+                  </div>
+                  <p className="font-semibold">
+                    {Math.round((dashboardStats.cancelledBookings / dashboardStats.totalBookings) * 100)}%
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bookings Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Booking Management</CardTitle>
+          <CardDescription>View and manage all your booking requests</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Search and Filter */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by name, email, or vehicle"
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <div className="flex items-center">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <span>{statusFilter || "Status"}</span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Input
+                type="date"
+                className="w-[150px]"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+              />
+
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("")
+                  setStatusFilter("")
+                  setDateFilter("")
+                }}
               >
-                Name
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Service
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Date & Time
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
+                Clear
+              </Button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="mb-6">
+            <TabsList className="grid grid-cols-5 w-full">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="confirmed">Confirmed</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="mt-4">
+              <BookingsList
+                bookings={filteredBookings}
+                onStatusChange={handleStatusChange}
+                onViewDetails={viewBookingDetails}
+                onCompleteBooking={handleCompleteBooking}
+                getStatusBadge={getStatusBadge}
+                formatDate={formatDate}
+              />
+            </TabsContent>
+
+            <TabsContent value="pending" className="mt-4">
+              <BookingsList
+                bookings={filteredBookings}
+                onStatusChange={handleStatusChange}
+                onViewDetails={viewBookingDetails}
+                onCompleteBooking={handleCompleteBooking}
+                getStatusBadge={getStatusBadge}
+                formatDate={formatDate}
+              />
+            </TabsContent>
+
+            <TabsContent value="confirmed" className="mt-4">
+              <BookingsList
+                bookings={filteredBookings}
+                onStatusChange={handleStatusChange}
+                onViewDetails={viewBookingDetails}
+                onCompleteBooking={handleCompleteBooking}
+                getStatusBadge={getStatusBadge}
+                formatDate={formatDate}
+              />
+            </TabsContent>
+
+            <TabsContent value="completed" className="mt-4">
+              <CompletedBookingsList
+                bookings={filteredBookings}
+                onViewDetails={viewBookingDetails}
+                getStatusBadge={getStatusBadge}
+                formatDate={formatDate}
+              />
+            </TabsContent>
+
+            <TabsContent value="cancelled" className="mt-4">
+              <BookingsList
+                bookings={filteredBookings}
+                onStatusChange={handleStatusChange}
+                onViewDetails={viewBookingDetails}
+                onCompleteBooking={handleCompleteBooking}
+                getStatusBadge={getStatusBadge}
+                formatDate={formatDate}
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* View Booking Modal */}
+      {isViewModalOpen && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Booking Details</h2>
+                <button onClick={() => setIsViewModalOpen(false)} className="text-gray-500 hover:text-gray-700">
+                  <XCircle className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-700">Customer Information</h3>
+                  <p className="mt-2">
+                    <span className="font-medium">Name:</span> {selectedBooking.name}
+                  </p>
+                  <p>
+                    <span className="font-medium">Email:</span> {selectedBooking.email}
+                  </p>
+                  <p>
+                    <span className="font-medium">Phone:</span> {selectedBooking.phone}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-700">Booking Information</h3>
+                  <p className="mt-2">
+                    <span className="font-medium">ID:</span> {selectedBooking.id}
+                  </p>
+                  <p>
+                    <span className="font-medium">Date:</span> {formatDate(selectedBooking.date)}
+                  </p>
+                  <p>
+                    <span className="font-medium">Time Slot:</span> {selectedBooking.timeSlot}
+                  </p>
+                  <p>
+                    <span className="font-medium">Status:</span> {getStatusBadge(selectedBooking.status)}
+                  </p>
+                  <p>
+                    <span className="font-medium">Created:</span> {formatDate(selectedBooking.createdAt)} at{" "}
+                    {formatTime(selectedBooking.createdAt)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h3 className="font-semibold text-gray-700">Vehicle & Issue</h3>
+                <p className="mt-2">
+                  <span className="font-medium">Vehicle:</span> {selectedBooking.vehicle}
+                </p>
+                <p>
+                  <span className="font-medium">Issue:</span> {selectedBooking.issue}
+                </p>
+              </div>
+
+              {selectedBooking.status === "completed" && (
+                <div className="mb-4 bg-green-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-green-700">Completion Details</h3>
+                  <p className="mt-2">
+                    <span className="font-medium">Completed On:</span> {formatDate(selectedBooking.completedAt)} at{" "}
+                    {formatTime(selectedBooking.completedAt)}
+                  </p>
+                  <p>
+                    <span className="font-medium">Service Performed:</span> {selectedBooking.servicePerformed}
+                  </p>
+                  <p>
+                    <span className="font-medium">Cost:</span> {selectedBooking.cost}
+                  </p>
+                </div>
+              )}
+
+              <div className="mb-4">
+                <h3 className="font-semibold text-gray-700">Notes</h3>
+                <p className="mt-2">{selectedBooking.notes || "No notes available"}</p>
+              </div>
+
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button variant="outline" onClick={() => setIsViewModalOpen(false)}>
+                  Close
+                </Button>
+
+                {selectedBooking.status === "pending" && (
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => {
+                      handleStatusChange(selectedBooking.id, "confirmed")
+                      setIsViewModalOpen(false)
+                    }}
+                  >
+                    Confirm Booking
+                  </Button>
+                )}
+
+                {selectedBooking.status === "confirmed" && (
+                  <Button
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => {
+                      setIsViewModalOpen(false)
+                      handleCompleteBooking(selectedBooking)
+                    }}
+                  >
+                    Mark as Completed
+                  </Button>
+                )}
+
+                {(selectedBooking.status === "pending" || selectedBooking.status === "confirmed") && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      handleStatusChange(selectedBooking.id, "cancelled")
+                      setIsViewModalOpen(false)
+                    }}
+                  >
+                    Cancel Booking
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Booking Modal */}
+      {isCompleteModalOpen && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Complete Booking</h2>
+                <button onClick={() => setIsCompleteModalOpen(false)} className="text-gray-500 hover:text-gray-700">
+                  <XCircle className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Service Performed</label>
+                  <Input
+                    value={completionDetails.servicePerformed}
+                    onChange={(e) => setCompletionDetails({ ...completionDetails, servicePerformed: e.target.value })}
+                    placeholder="e.g. Oil change, brake replacement"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cost</label>
+                  <Input
+                    value={completionDetails.cost}
+                    onChange={(e) => setCompletionDetails({ ...completionDetails, cost: e.target.value })}
+                    placeholder="e.g. £95"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    rows={3}
+                    value={completionDetails.notes}
+                    onChange={(e) => setCompletionDetails({ ...completionDetails, notes: e.target.value })}
+                    placeholder="Additional notes about the service"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button variant="outline" onClick={() => setIsCompleteModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={submitCompletionDetails}
+                  disabled={!completionDetails.servicePerformed || !completionDetails.cost}
+                >
+                  Complete Booking
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Regular Bookings List Component
+function BookingsList({ bookings, onStatusChange, onViewDetails, onCompleteBooking, getStatusBadge, formatDate }) {
+  if (bookings.length === 0) {
+    return <div className="text-center py-8 text-gray-500">No bookings found</div>
+  }
+
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Customer
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Vehicle
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Date & Time
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Status
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {bookings.map((booking) => (
+            <tr key={booking.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm font-medium text-gray-900">{booking.name}</div>
+                <div className="text-xs text-gray-500">{booking.email}</div>
+                <div className="text-xs text-gray-500">{booking.phone}</div>
+              </td>
+              <td className="px-6 py-4">
+                <div className="text-sm text-gray-900">{booking.vehicle}</div>
+                <div className="text-xs text-gray-500 line-clamp-1">{booking.issue}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-900">{formatDate(booking.date)}</div>
+                <div className="text-xs text-gray-500">{booking.timeSlot}</div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(booking.status)}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <Button variant="ghost" size="sm" onClick={() => onViewDetails(booking)}>
+                  View
+                </Button>
+
+                {booking.status === "pending" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-800"
+                    onClick={() => onStatusChange(booking.id, "confirmed")}
+                  >
+                    Confirm
+                  </Button>
+                )}
+
+                {booking.status === "confirmed" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-green-600 hover:text-green-800"
+                    onClick={() => onCompleteBooking(booking)}
+                  >
+                    Complete
+                  </Button>
+                )}
+
+                {(booking.status === "pending" || booking.status === "confirmed") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:text-red-800"
+                    onClick={() => onStatusChange(booking.id, "cancelled")}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </td>
             </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            <tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+// Completed Bookings List Component
+function CompletedBookingsList({ bookings, onViewDetails, getStatusBadge, formatDate }) {
+  if (bookings.length === 0) {
+    return <div className="text-center py-8 text-gray-500">No completed bookings found</div>
+  }
+
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Customer
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Vehicle
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Date Completed
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Service Details
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Cost
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {bookings.map((booking) => (
+            <tr key={booking.id} className="hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">John Smith</div>
-                <div className="text-sm text-gray-500">john@example.com</div>
+                <div className="text-sm font-medium text-gray-900">{booking.name}</div>
+                <div className="text-xs text-gray-500">{booking.email}</div>
+              </td>
+              <td className="px-6 py-4">
+                <div className="text-sm text-gray-900">{booking.vehicle}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">Oil Change</div>
+                <div className="text-sm text-gray-900">{formatDate(booking.completedAt || booking.date)}</div>
+                <div className="text-xs text-gray-500">{booking.timeSlot}</div>
+              </td>
+              <td className="px-6 py-4">
+                <div className="text-sm text-gray-900">{booking.servicePerformed || "Not specified"}</div>
+                <div className="text-xs text-gray-500 line-clamp-1">{booking.notes || "No notes"}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">May 2, 2025</div>
-                <div className="text-sm text-gray-500">10:30 AM</div>
+                <div className="text-sm font-medium text-gray-900">{booking.cost || "Not specified"}</div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                  Confirmed
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <button className="text-indigo-600 hover:text-indigo-900 mr-2">View</button>
-                <button className="text-red-600 hover:text-red-900">Cancel</button>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <Button variant="ghost" size="sm" onClick={() => onViewDetails(booking)}>
+                  View
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-blue-600 hover:text-blue-800"
+                  onClick={() => window.print()}
+                >
+                  Print
+                </Button>
               </td>
             </tr>
-            <tr>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">Jane Doe</div>
-                <div className="text-sm text-gray-500">jane@example.com</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">Brake Repair</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">May 3, 2025</div>
-                <div className="text-sm text-gray-500">2:00 PM</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                  Pending
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <button className="text-indigo-600 hover:text-indigo-900 mr-2">View</button>
-                <button className="text-green-600 hover:text-green-900 mr-2">Confirm</button>
-                <button className="text-red-600 hover:text-red-900">Cancel</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

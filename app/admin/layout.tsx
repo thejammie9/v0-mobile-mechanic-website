@@ -2,7 +2,7 @@ import type React from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
-import { AdminWarningBanner } from "@/components/admin-warning-banner"
+import { Calendar, Settings, LogOut, Home, BarChart3 } from "lucide-react"
 
 export default function AdminLayout({
   children,
@@ -28,24 +28,47 @@ export default function AdminLayout({
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 <Link
+                  href="/admin"
+                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium hover:border-gray-300 hover:text-gray-200"
+                >
+                  <Home className="h-4 w-4 mr-1" />
+                  Dashboard
+                </Link>
+                <Link
                   href="/admin/bookings"
                   className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium hover:border-gray-300 hover:text-gray-200"
                 >
+                  <Calendar className="h-4 w-4 mr-1" />
                   Bookings
+                </Link>
+                <Link
+                  href="/admin/reports"
+                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium hover:border-gray-300 hover:text-gray-200"
+                >
+                  <BarChart3 className="h-4 w-4 mr-1" />
+                  Reports
                 </Link>
                 <Link
                   href="/admin/settings"
                   className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium hover:border-gray-300 hover:text-gray-200"
                 >
+                  <Settings className="h-4 w-4 mr-1" />
                   Settings
                 </Link>
               </div>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:items-center">
               <Link
+                href="/"
+                className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-800 hover:bg-blue-700 mr-2"
+              >
+                View Website
+              </Link>
+              <Link
                 href="/admin/logout"
                 className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-800 hover:bg-blue-700"
               >
+                <LogOut className="h-4 w-4 mr-1" />
                 Logout
               </Link>
             </div>
@@ -55,12 +78,7 @@ export default function AdminLayout({
 
       <div className="py-10">
         <main>
-          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            {/* Add the warning banner */}
-            <AdminWarningBanner />
-
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>
