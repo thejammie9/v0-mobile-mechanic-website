@@ -79,38 +79,6 @@ export default function AdminLayout({
               </div>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:items-center">
-              <div className="flex space-x-4 mr-4">
-                <Link
-                  href="/#services"
-                  className="inline-flex items-center px-2 py-1 text-sm font-medium text-white hover:text-gray-200"
-                >
-                  Services
-                </Link>
-                <Link
-                  href="/#gallery"
-                  className="inline-flex items-center px-2 py-1 text-sm font-medium text-white hover:text-gray-200"
-                >
-                  Gallery
-                </Link>
-                <Link
-                  href="/#reviews"
-                  className="inline-flex items-center px-2 py-1 text-sm font-medium text-white hover:text-gray-200"
-                >
-                  Reviews
-                </Link>
-                <Link
-                  href="/#booking"
-                  className="inline-flex items-center px-2 py-1 text-sm font-medium text-white hover:text-gray-200"
-                >
-                  Book Now
-                </Link>
-                <Link
-                  href="/#contact"
-                  className="inline-flex items-center px-2 py-1 text-sm font-medium text-white hover:text-gray-200"
-                >
-                  Contact
-                </Link>
-              </div>
               <Link
                 href="/"
                 className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-800 hover:bg-blue-700 mr-2"
