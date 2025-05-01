@@ -234,7 +234,24 @@ export default function PartsPage() {
                           <div className="text-sm text-gray-900">{part.category}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{formatCurrency(part.price)}</div>
+                          <div className="text-sm font-medium text-gray-900 group relative">
+                            {formatCurrency(part.price)}
+                            <button
+                              className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const newPrice = prompt("Enter new price:", part.price.toString())
+                                if (newPrice !== null) {
+                                  const updatedParts = parts.map((p) =>
+                                    p.id === part.id ? { ...p, price: Number.parseFloat(newPrice) || p.price } : p,
+                                  )
+                                  setParts(updatedParts)
+                                }
+                              }}
+                            >
+                              <Edit className="h-3 w-3 text-gray-400 hover:text-gray-600" />
+                            </button>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{formatCurrency(part.cost)}</div>

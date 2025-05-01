@@ -115,6 +115,14 @@ export default function InvoicesPage() {
     status: "pending",
   })
 
+  const [isNewCustomer, setIsNewCustomer] = useState(false)
+  const [newCustomer, setNewCustomer] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+  })
+
   // Filter invoices based on active tab and search term
   const filteredInvoices = invoices.filter((invoice) => {
     // Filter by tab
@@ -198,15 +206,38 @@ export default function InvoicesPage() {
     })
   }
 
-  // Submit create invoice form
   const submitCreateInvoiceForm = () => {
-    // Find customer name
-    const customer = mockCustomers.find((c) => c.id === newInvoice.customerId)
+    let customerId = newInvoice.customerId
+    let customerName = ""
+
+    // If adding a new customer
+    if (isNewCustomer) {
+      // Generate a new customer ID
+      customerId = `cust_${Math.floor(1000 + Math.random() * 9000)}`
+      customerName = newCustomer.name
+
+      // Add the new customer to the mockCustomers array
+      const newCustomerObj = {
+        id: customerId,
+        name: newCustomer.name,
+        email: newCustomer.email,
+        phone: newCustomer.phone,
+        address: newCustomer.address,
+      }
+
+      // In a real application, you would save this to your database
+      // For now, we'll just add it to our mock data
+      mockCustomers.push(newCustomerObj)
+    } else {
+      // Find customer name from existing customers
+      const customer = mockCustomers.find((c) => c.id === customerId)
+      customerName = customer ? customer.name : "Unknown Customer"
+    }
 
     const newInvoiceObj = {
       id: `INV-${new Date().getFullYear()}-${(invoices.length + 1).toString().padStart(3, "0")}`,
-      customerId: newInvoice.customerId,
-      customerName: customer ? customer.name : "Unknown Customer",
+      customerId: customerId,
+      customerName: customerName,
       date: newInvoice.date,
       dueDate: newInvoice.dueDate,
       items: newInvoice.items,
@@ -231,6 +262,15 @@ export default function InvoicesPage() {
       total: 0,
       status: "pending",
     })
+
+    // Reset new customer form
+    setNewCustomer({
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+    })
+    setIsNewCustomer(false)
   }
 
   // Mark invoice as paid
@@ -432,22 +472,71 @@ export default function InvoicesPage() {
                 {/* Customer and Dates */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-                    <Select
-                      value={newInvoice.customerId}
-                      onValueChange={(value) => setNewInvoice({ ...newInvoice, customerId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select customer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockCustomers.map((customer) => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-medium text-gray-700">Customer</label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsNewCustomer(!isNewCustomer)}
+                        className="text-xs h-6 px-2"
+                      >
+                        {isNewCustomer ? "Select Existing" : "Add New Customer"}
+                      </Button>
+                    </div>
+
+                    {isNewCustomer ? (
+                      <div className="space-y-3 border rounded-md p-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
+                          <Input
+                            value={newCustomer.name}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                            placeholder="Customer name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                          <Input
+                            type="email"
+                            value={newCustomer.email}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                            placeholder="Email address"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
+                          <Input
+                            value={newCustomer.phone}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                            placeholder="Phone number"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Address</label>
+                          <Input
+                            value={newCustomer.address}
+                            onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
+                            placeholder="Address"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <Select
+                        value={newInvoice.customerId}
+                        onValueChange={(value) => setNewInvoice({ ...newInvoice, customerId: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select customer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {mockCustomers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              {customer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
@@ -626,7 +715,8 @@ export default function InvoicesPage() {
                 <Button
                   onClick={submitCreateInvoiceForm}
                   disabled={
-                    !newInvoice.customerId ||
+                    (!isNewCustomer && !newInvoice.customerId) ||
+                    (isNewCustomer && !newCustomer.name) ||
                     newInvoice.items.some((item) => !item.description) ||
                     newInvoice.total === 0
                   }
