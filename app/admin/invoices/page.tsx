@@ -18,20 +18,6 @@ const mockCustomers = [
   { id: "cust_1005", name: "David Taylor", email: "david@example.com", phone: "07654321987" },
 ]
 
-// Mock data for parts
-const mockParts = [
-  { id: "part_001", name: "Oil Filter", price: 15 },
-  { id: "part_002", name: "Air Filter", price: 12 },
-  { id: "part_003", name: "Brake Pads (Front)", price: 45 },
-  { id: "part_004", name: "Brake Pads (Rear)", price: 40 },
-  { id: "part_005", name: "Battery", price: 85 },
-  { id: "part_006", name: "Spark Plugs (set of 4)", price: 28 },
-  { id: "part_007", name: "Wiper Blades (pair)", price: 25 },
-  { id: "part_008", name: "Engine Oil (5L)", price: 35 },
-  { id: "part_009", name: "Coolant (2L)", price: 18 },
-  { id: "part_010", name: "Timing Belt Kit", price: 120 },
-]
-
 // Mock data for invoices - updated structure with separate labor and parts
 const mockInvoices = [
   {
@@ -217,26 +203,8 @@ export default function InvoicesPage() {
   }
 
   // Handle adding a part to the invoice
-  const handleAddPart = (part) => {
-    const updatedParts = [...newInvoice.parts]
-
-    // Check if part already exists in the invoice
-    const existingPartIndex = updatedParts.findIndex((p) => p.name === part.name)
-
-    if (existingPartIndex >= 0) {
-      // Increment quantity if part already exists
-      updatedParts[existingPartIndex].quantity += 1
-      updatedParts[existingPartIndex].total =
-        updatedParts[existingPartIndex].quantity * updatedParts[existingPartIndex].price
-    } else {
-      // Add new part if it doesn't exist
-      updatedParts.push({
-        name: part.name,
-        quantity: 1,
-        price: part.price,
-        total: part.price,
-      })
-    }
+  const handleAddPart = () => {
+    const updatedParts = [...newInvoice.parts, { name: "", quantity: 1, price: 0, total: 0 }]
 
     // Recalculate invoice totals
     updateInvoiceTotals(newInvoice.labor, updatedParts)
@@ -710,78 +678,142 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                {/* Parts Section */}
+                {/* Parts Items - Manual Entry */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="text-lg font-medium">Parts</h3>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setNewInvoice({
+                          ...newInvoice,
+                          parts: [...newInvoice.parts, { name: "", quantity: 1, price: 0, total: 0 }],
+                        })
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Part
+                    </Button>
                   </div>
 
-                  {/* Selected Parts Table */}
-                  {newInvoice.parts.length > 0 && (
-                    <div className="border rounded-lg overflow-hidden mb-4">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              Part Name
-                            </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              Quantity
-                            </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              Price (£)
-                            </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                              Total (£)
-                            </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"></th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {newInvoice.parts.map((part, index) => (
-                            <tr key={index}>
-                              <td className="px-4 py-2">{part.name}</td>
-                              <td className="px-4 py-2">
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  value={part.quantity}
-                                  onChange={(e) => handlePartQuantityChange(index, Number.parseInt(e.target.value))}
-                                  className="w-20"
-                                />
-                              </td>
-                              <td className="px-4 py-2">{formatCurrency(part.price)}</td>
-                              <td className="px-4 py-2">{formatCurrency(part.total)}</td>
-                              <td className="px-4 py-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemovePart(index)}
-                                  className="text-red-500 hover:text-red-700"
-                                >
-                                  <Trash className="h-4 w-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Part Name</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Price (£)</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total (£)</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {newInvoice.parts.map((part, index) => (
+                          <tr key={index}>
+                            <td className="px-4 py-2">
+                              <Input
+                                value={part.name}
+                                onChange={(e) => {
+                                  const updatedParts = [...newInvoice.parts]
+                                  updatedParts[index].name = e.target.value
+                                  setNewInvoice({
+                                    ...newInvoice,
+                                    parts: updatedParts,
+                                  })
+                                }}
+                                placeholder="Part name"
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <Input
+                                type="number"
+                                min="1"
+                                value={part.quantity}
+                                onChange={(e) => {
+                                  const updatedParts = [...newInvoice.parts]
+                                  const quantity = Number.parseInt(e.target.value) || 1
+                                  updatedParts[index].quantity = quantity
+                                  updatedParts[index].total = quantity * updatedParts[index].price
 
-                  {/* Parts Catalog */}
-                  <h4 className="text-md font-medium mb-2">Parts Catalog</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {mockParts.map((part) => (
-                      <div
-                        key={part.id}
-                        className="border rounded p-2 flex justify-between items-center cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleAddPart(part)}
-                      >
-                        <span>{part.name}</span>
-                        <span className="font-medium">{formatCurrency(part.price)}</span>
-                      </div>
-                    ))}
+                                  // Recalculate totals
+                                  const laborTotal = newInvoice.labor.reduce((sum, item) => sum + item.total, 0)
+                                  const partsTotal = updatedParts.reduce((sum, item) => sum + item.total, 0)
+                                  const subtotal = laborTotal + partsTotal
+                                  const tax = subtotal * 0.2 // 20% tax
+
+                                  setNewInvoice({
+                                    ...newInvoice,
+                                    parts: updatedParts,
+                                    subtotal,
+                                    tax,
+                                    total: subtotal + tax,
+                                  })
+                                }}
+                                className="w-20"
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={part.price}
+                                onChange={(e) => {
+                                  const updatedParts = [...newInvoice.parts]
+                                  const price = Number.parseFloat(e.target.value) || 0
+                                  updatedParts[index].price = price
+                                  updatedParts[index].total = updatedParts[index].quantity * price
+
+                                  // Recalculate totals
+                                  const laborTotal = newInvoice.labor.reduce((sum, item) => sum + item.total, 0)
+                                  const partsTotal = updatedParts.reduce((sum, item) => sum + item.total, 0)
+                                  const subtotal = laborTotal + partsTotal
+                                  const tax = subtotal * 0.2 // 20% tax
+
+                                  setNewInvoice({
+                                    ...newInvoice,
+                                    parts: updatedParts,
+                                    subtotal,
+                                    tax,
+                                    total: subtotal + tax,
+                                  })
+                                }}
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <div className="py-2 px-3 bg-gray-50 rounded">{formatCurrency(part.total)}</div>
+                            </td>
+                            <td className="px-4 py-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const updatedParts = [...newInvoice.parts]
+                                  updatedParts.splice(index, 1)
+
+                                  // Recalculate totals
+                                  const laborTotal = newInvoice.labor.reduce((sum, item) => sum + item.total, 0)
+                                  const partsTotal = updatedParts.reduce((sum, item) => sum + item.total, 0)
+                                  const subtotal = laborTotal + partsTotal
+                                  const tax = subtotal * 0.2 // 20% tax
+
+                                  setNewInvoice({
+                                    ...newInvoice,
+                                    parts: updatedParts,
+                                    subtotal,
+                                    tax,
+                                    total: subtotal + tax,
+                                  })
+                                }}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
@@ -816,6 +848,7 @@ export default function InvoicesPage() {
                     (!isNewCustomer && !newInvoice.customerId) ||
                     (isNewCustomer && !newCustomer.name) ||
                     newInvoice.labor.some((item) => !item.description) ||
+                    newInvoice.parts.some((item) => !item.name) ||
                     newInvoice.total === 0
                   }
                 >
