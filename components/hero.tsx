@@ -18,7 +18,7 @@ export default function Hero() {
             <p className="text-xl md:text-2xl mb-8 text-gray-200">
               Quality servicing, diagnostics & repairs without the garage visit.
             </p>
-            <Link href="#booking">
+            <Link href="/#booking">
               <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-8 py-6 text-lg">
                 Book Now
               </Button>
