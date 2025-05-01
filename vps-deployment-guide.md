@@ -146,7 +146,7 @@ This guide will help you deploy the Mobile Mechanic website on a VPS (Virtual Pr
    \`\`\`
 
 2. Add the following content:
-   ```nginx
+   \`\`\`nginx
    server {
        listen 80;
        server_name yourdomain.com www.yourdomain.com;

@@ -1,80 +1,87 @@
 import Image from "next/image"
-
-const galleryItems = [
-  {
-    title: "Engine Overhaul",
-    description: "Complete engine rebuild after catastrophic timing belt failure.",
-    beforeImage: "/damaged-car-engine.png",
-    afterImage: "/repaired-car-engine.png",
-    testimonial:
-      "John saved my Golf when other garages quoted me thousands. Fast, professional service right on my driveway!",
-    customer: "Michael S.",
-  },
-  {
-    title: "Brake System Replacement",
-    description: "Full brake system overhaul including discs, pads and calipers.",
-    beforeImage: "/worn-brake-system.png",
-    afterImage: "/new-brake-system.png",
-    testimonial: "Incredible service! Same-day brake replacement at my office car park. Couldn't be happier.",
-    customer: "Sarah T.",
-  },
-  {
-    title: "Electrical Fault Diagnosis",
-    description: "Complex electrical issue diagnosed and repaired without dealership costs.",
-    beforeImage: "/car-electrical-problem.png",
-    afterImage: "/fixed-car-electronics.png",
-    testimonial:
-      "After weeks of frustration with my Audi's electrical gremlins, the problem was solved in hours. Brilliant service!",
-    customer: "David M.",
-  },
-]
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function Gallery() {
+  const portfolioItems = [
+    {
+      id: "1",
+      title: "Engine Overhaul",
+      vehicle: "2018 VW Golf",
+      description: "Complete engine rebuild after catastrophic timing belt failure.",
+      image_before: "/damaged-engine.png",
+      image_after: "/repaired-engine.png",
+      testimonial:
+        "John saved my Golf when other garages quoted me thousands. Fast, professional service right on my driveway!",
+      customer: "Michael S.",
+    },
+    {
+      id: "2",
+      title: "Brake System Replacement",
+      vehicle: "2020 Ford Focus",
+      description: "Full brake system overhaul including discs, pads and calipers.",
+      image_before: "/worn-brake-system.png",
+      image_after: "/new-brake-system.png",
+      testimonial: "Incredible service! Same-day brake replacement at my office car park. Couldn't be happier.",
+      customer: "Sarah T.",
+    },
+    {
+      id: "3",
+      title: "Electrical Fault Diagnosis",
+      vehicle: "2019 Audi A4",
+      description: "Complex electrical issue diagnosed and repaired without dealership costs.",
+      image_before: "/placeholder.svg?key=n9lkj",
+      image_after: "/fixed-car-electronics.png",
+      testimonial:
+        "After weeks of frustration with my Audi's electrical gremlins, the problem was solved in hours. Brilliant service!",
+      customer: "David M.",
+    },
+  ]
+
   return (
     <section className="py-16 bg-gray-100" id="gallery">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-6 text-blue-900">Our Work</h2>
-        <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
-          Browse through our gallery of recent repairs and services. We take pride in our workmanship and attention to
-          detail.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {galleryItems.map((item, index) => (
-            <div key={index} className="bg-white rounded-lg overflow-hidden shadow">
-              <div className="p-4">
-                <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                <p className="text-gray-600 mb-4">{item.description}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2 p-4">
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Before</p>
-                  <div className="relative h-32 w-full">
+        <h2 className="text-3xl font-bold text-center mb-12 text-blue-900">Our Recent Work</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {portfolioItems.map((item) => (
+            <Card key={item.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl">{item.title}</CardTitle>
+                <CardDescription className="font-medium text-orange-600">{item.vehicle}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-600">{item.description}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Before</p>
                     <Image
-                      src={item.beforeImage || "/placeholder.svg"}
+                      src={item.image_before || "/placeholder.svg"}
                       alt={`${item.title} before`}
-                      className="rounded-md object-cover"
-                      fill
+                      width={400}
+                      height={300}
+                      className="rounded-md object-cover h-32 w-full"
                     />
                   </div>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">After</p>
-                  <div className="relative h-32 w-full">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">After</p>
                     <Image
-                      src={item.afterImage || "/placeholder.svg"}
+                      src={item.image_after || "/placeholder.svg"}
                       alt={`${item.title} after`}
-                      className="rounded-md object-cover"
-                      fill
+                      width={400}
+                      height={300}
+                      className="rounded-md object-cover h-32 w-full"
                     />
                   </div>
                 </div>
-              </div>
-              <div className="bg-gray-50 border-t p-4">
-                <p className="italic text-sm text-gray-600">"{item.testimonial}"</p>
-                <p className="text-sm font-medium mt-2">— {item.customer}</p>
-              </div>
-            </div>
+              </CardContent>
+              {item.testimonial && item.customer && (
+                <CardFooter className="bg-gray-50 border-t">
+                  <div>
+                    <p className="italic text-sm text-gray-600">"{item.testimonial}"</p>
+                    <p className="text-sm font-medium mt-2">— {item.customer}</p>
+                  </div>
+                </CardFooter>
+              )}
+            </Card>
           ))}
         </div>
       </div>

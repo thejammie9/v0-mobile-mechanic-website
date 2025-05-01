@@ -2,13 +2,13 @@ import { Phone, Mail, MapPin } from "lucide-react"
 
 export default function Contact() {
   return (
-    <section className="py-16 bg-white" id="contact">
+    <section className="py-16 bg-gray-100" id="contact">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl font-bold text-center mb-12 text-blue-900">Contact Us</h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-8">
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <h3 className="text-xl font-bold mb-4 text-blue-800">Get In Touch</h3>
 
               <div className="space-y-4">
@@ -40,7 +40,7 @@ export default function Contact() {
               </div>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <h3 className="text-xl font-bold mb-4 text-blue-800">Business Hours</h3>
 
               <div className="space-y-2">
@@ -69,6 +69,7 @@ export default function Contact() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
+              title="Edinburgh and surrounding areas service map"
             ></iframe>
           </div>
         </div>

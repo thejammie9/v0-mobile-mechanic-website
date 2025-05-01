@@ -6,6 +6,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Remove the 'output: "export"' line to enable dynamic features
   images: {
     domains: ["placeholder.com"],
     unoptimized: true,

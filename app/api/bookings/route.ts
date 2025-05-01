@@ -1,68 +1,34 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { query } from "@/lib/db"
-import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
 
-// GET handler to fetch all bookings
-export async function GET(request: NextRequest) {
-  try {
-    // Check authentication
-    const authCookie = cookies().get("admin_auth")?.value
-    if (!authCookie || authCookie !== process.env.ADMIN_AUTH_TOKEN) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+export async function GET() {
+  // In a real application, you would fetch bookings from a database
+  // For now, we'll just return some mock data
+  const bookings = [
+    {
+      id: "booking_123",
+      name: "John Smith",
+      email: "john@example.com",
+      phone: "07463451967",
+      vehicle: "Ford Focus 2018",
+      issue: "Engine making strange noise",
+      date: "2023-06-15",
+      timeSlot: "Morning (09:00 - 12:30)",
+      status: "confirmed",
+      created_at: "2023-06-10T14:30:00Z",
+    },
+    {
+      id: "booking_456",
+      name: "Sarah Johnson",
+      email: "sarah@example.com",
+      phone: "07712345678",
+      vehicle: "Audi A4 2020",
+      issue: "Brake pads need replacing",
+      date: "2023-06-16",
+      timeSlot: "Afternoon (13:30 - 17:30)",
+      status: "pending",
+      created_at: "2023-06-11T09:15:00Z",
+    },
+  ]
 
-    // Get query parameters
-    const searchParams = request.nextUrl.searchParams
-    const status = searchParams.get("status")
-    const limit = Number.parseInt(searchParams.get("limit") || "100")
-    const offset = Number.parseInt(searchParams.get("offset") || "0")
-
-    // Build query
-    let sql = `
-      SELECT 
-        id, 
-        name, 
-        email, 
-        phone, 
-        vehicle, 
-        issue, 
-        booking_date as date, 
-        time_slot as timeSlot, 
-        status, 
-        created_at as createdAt,
-        cancellation_token as cancellationToken
-      FROM bookings
-    `
-    const params: any[] = []
-
-    // Add status filter if provided
-    if (status) {
-      sql += " WHERE status = ?"
-      params.push(status)
-    }
-
-    // Add order by and limit
-    sql += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
-    params.push(limit, offset)
-
-    // Execute query
-    const results = await query(sql, params)
-
-    // Format dates
-    const bookings = (results as any[]).map((booking) => ({
-      ...booking,
-      createdAt: new Date(booking.createdAt).toISOString(),
-    }))
-
-    return NextResponse.json({
-      success: true,
-      bookings,
-      count: bookings.length,
-      limit,
-      offset,
-    })
-  } catch (error) {
-    console.error("Error fetching bookings:", error)
-    return NextResponse.json({ success: false, message: "Failed to fetch bookings" }, { status: 500 })
-  }
+  return NextResponse.json({ success: true, bookings })
 }

@@ -41,21 +41,35 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Execute query
-    const results = await query(sql, queryParams)
+    // const results = await query(sql, queryParams)
 
-    if ((results as any[]).length === 0) {
-      return NextResponse.json({ success: false, message: "Booking not found" }, { status: 404 })
+    // if ((results as any[]).length === 0) {
+    //   return NextResponse.json({ success: false, message: "Booking not found" }, { status: 404 })
+    // }
+
+    // const booking = (results as any[])[0]
+
+    // // Format dates
+    // booking.createdAt = new Date(booking.createdAt).toISOString()
+
+    // return NextResponse.json({
+    //   success: true,
+    //   booking,
+    // })
+    const booking = {
+      id,
+      name: "John Smith",
+      email: "john@example.com",
+      phone: "07463451967",
+      vehicle: "Ford Focus 2018",
+      issue: "Engine making strange noise",
+      date: "2023-06-15",
+      timeSlot: "Morning (09:00 - 12:30)",
+      status: "confirmed",
+      created_at: "2023-06-10T14:30:00Z",
     }
 
-    const booking = (results as any[])[0]
-
-    // Format dates
-    booking.createdAt = new Date(booking.createdAt).toISOString()
-
-    return NextResponse.json({
-      success: true,
-      booking,
-    })
+    return NextResponse.json({ success: true, booking })
   } catch (error) {
     console.error("Error fetching booking:", error)
     return NextResponse.json({ success: false, message: "Failed to fetch booking" }, { status: 500 })
