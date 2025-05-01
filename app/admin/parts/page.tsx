@@ -9,16 +9,116 @@ import { AdminWarningBanner } from "@/components/admin-warning-banner"
 
 // Mock data for parts
 const mockParts = [
-  { id: "part_001", name: "Oil Filter", price: 15, cost: 8, stock: 12, minStock: 5, category: "Filters" },
-  { id: "part_002", name: "Air Filter", price: 12, cost: 6, stock: 8, minStock: 4, category: "Filters" },
-  { id: "part_003", name: "Brake Pads (Front)", price: 45, cost: 25, stock: 6, minStock: 2, category: "Brakes" },
-  { id: "part_004", name: "Brake Pads (Rear)", price: 40, cost: 22, stock: 4, minStock: 2, category: "Brakes" },
-  { id: "part_005", name: "Battery", price: 85, cost: 50, stock: 3, minStock: 2, category: "Electrical" },
-  { id: "part_006", name: "Spark Plugs (set of 4)", price: 28, cost: 15, stock: 10, minStock: 4, category: "Engine" },
-  { id: "part_007", name: "Wiper Blades (pair)", price: 25, cost: 12, stock: 15, minStock: 5, category: "Exterior" },
-  { id: "part_008", name: "Engine Oil (5L)", price: 35, cost: 20, stock: 20, minStock: 8, category: "Fluids" },
-  { id: "part_009", name: "Coolant (2L)", price: 18, cost: 9, stock: 14, minStock: 6, category: "Fluids" },
-  { id: "part_010", name: "Timing Belt Kit", price: 120, cost: 75, stock: 2, minStock: 1, category: "Engine" },
+  {
+    id: "part_001",
+    name: "Oil Filter",
+    price: 15,
+    cost: 8,
+    stock: 12,
+    minStock: 5,
+    category: "Filters",
+    isVehicleSpecific: false,
+  },
+  {
+    id: "part_002",
+    name: "Air Filter",
+    price: 12,
+    cost: 6,
+    stock: 8,
+    minStock: 4,
+    category: "Filters",
+    isVehicleSpecific: false,
+  },
+  {
+    id: "part_003",
+    name: "Brake Pads (Front)",
+    price: 45,
+    cost: 25,
+    stock: 6,
+    minStock: 2,
+    category: "Brakes",
+    isVehicleSpecific: true,
+  },
+  {
+    id: "part_004",
+    name: "Brake Pads (Rear)",
+    price: 40,
+    cost: 22,
+    stock: 4,
+    minStock: 2,
+    category: "Brakes",
+    isVehicleSpecific: true,
+  },
+  {
+    id: "part_005",
+    name: "Battery",
+    price: 85,
+    cost: 50,
+    stock: 3,
+    minStock: 2,
+    category: "Electrical",
+    isVehicleSpecific: false,
+  },
+  {
+    id: "part_006",
+    name: "Spark Plugs (set of 4)",
+    price: 28,
+    cost: 15,
+    stock: 10,
+    minStock: 4,
+    category: "Engine",
+    isVehicleSpecific: false,
+  },
+  {
+    id: "part_007",
+    name: "Wiper Blades (pair)",
+    price: 25,
+    cost: 12,
+    stock: 15,
+    minStock: 5,
+    category: "Exterior",
+    isVehicleSpecific: false,
+  },
+  {
+    id: "part_008",
+    name: "Engine Oil (5L)",
+    price: 35,
+    cost: 20,
+    stock: 20,
+    minStock: 8,
+    category: "Fluids",
+    isVehicleSpecific: false,
+  },
+  {
+    id: "part_009",
+    name: "Coolant (2L)",
+    price: 18,
+    cost: 9,
+    stock: 14,
+    minStock: 6,
+    category: "Fluids",
+    isVehicleSpecific: false,
+  },
+  {
+    id: "part_010",
+    name: "Timing Belt Kit",
+    price: 120,
+    cost: 75,
+    stock: 2,
+    minStock: 1,
+    category: "Engine",
+    isVehicleSpecific: true,
+  },
+  {
+    id: "part_011",
+    name: "Vehicle-Specific Part",
+    price: 0,
+    cost: 0,
+    stock: 999,
+    minStock: 0,
+    category: "Vehicle-Specific",
+    isVehicleSpecific: true,
+  },
 ]
 
 export default function PartsPage() {
@@ -29,6 +129,7 @@ export default function PartsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedPart, setSelectedPart] = useState(null)
+  const [typeFilter, setTypeFilter] = useState("")
   const [partForm, setPartForm] = useState({
     name: "",
     price: 0,
@@ -36,12 +137,13 @@ export default function PartsPage() {
     stock: 0,
     minStock: 0,
     category: "",
+    isVehicleSpecific: false,
   })
 
   // Get unique categories
   const categories = [...new Set(parts.map((part) => part.category))].sort()
 
-  // Filter parts based on search term and category
+  // Filter parts based on search term, category, and type
   const filteredParts = parts.filter((part) => {
     // Filter by search term
     if (
@@ -57,6 +159,14 @@ export default function PartsPage() {
       return false
     }
 
+    // Filter by type
+    if (typeFilter === "standard" && part.isVehicleSpecific) {
+      return false
+    }
+    if (typeFilter === "vehicle-specific" && !part.isVehicleSpecific) {
+      return false
+    }
+
     return true
   })
 
@@ -69,6 +179,7 @@ export default function PartsPage() {
       stock: 0,
       minStock: 0,
       category: "",
+      isVehicleSpecific: false,
     })
     setIsAddModalOpen(true)
   }
@@ -83,6 +194,7 @@ export default function PartsPage() {
       stock: part.stock,
       minStock: part.minStock,
       category: part.category,
+      isVehicleSpecific: part.isVehicleSpecific,
     })
     setIsEditModalOpen(true)
   }
@@ -172,6 +284,16 @@ export default function PartsPage() {
                   </option>
                 ))}
               </select>
+
+              <select
+                className="h-10 rounded-md border border-input bg-background px-3 py-2"
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+              >
+                <option value="">All Types</option>
+                <option value="standard">Standard</option>
+                <option value="vehicle-specific">Vehicle-Specific</option>
+              </select>
             </div>
 
             {/* Parts Table */}
@@ -213,6 +335,12 @@ export default function PartsPage() {
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
+                      Type
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       Actions
                     </th>
                   </tr>
@@ -235,7 +363,7 @@ export default function PartsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 group relative">
-                            {formatCurrency(part.price)}
+                            {part.isVehicleSpecific ? "Variable" : formatCurrency(part.price)}
                             <button
                               className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
                               onClick={(e) => {
@@ -268,6 +396,19 @@ export default function PartsPage() {
                             )}
                           </div>
                           <div className="text-xs text-gray-500">Min: {part.minStock}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {part.isVehicleSpecific ? (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                Vehicle-Specific
+                              </span>
+                            ) : (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Standard
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <Button
@@ -396,7 +537,11 @@ export default function PartsPage() {
                       step="0.01"
                       value={partForm.price}
                       onChange={(e) => setPartForm({ ...partForm, price: Number.parseFloat(e.target.value) })}
+                      disabled={partForm.isVehicleSpecific}
                     />
+                    {partForm.isVehicleSpecific && (
+                      <p className="text-xs text-gray-500 mt-1">Price will be set per vehicle</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price (£)</label>
@@ -430,6 +575,19 @@ export default function PartsPage() {
                     />
                   </div>
                 </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="isVehicleSpecific"
+                    checked={partForm.isVehicleSpecific}
+                    onChange={(e) => setPartForm({ ...partForm, isVehicleSpecific: e.target.checked })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="isVehicleSpecific" className="ml-2 block text-sm text-gray-900">
+                    Vehicle-specific part (price varies by vehicle)
+                  </label>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-2 mt-6">
@@ -438,7 +596,9 @@ export default function PartsPage() {
                 </Button>
                 <Button
                   onClick={submitAddPartForm}
-                  disabled={!partForm.name || !partForm.category || partForm.price <= 0}
+                  disabled={
+                    !partForm.name || !partForm.category || (!partForm.isVehicleSpecific && partForm.price <= 0)
+                  }
                 >
                   Add Part
                 </Button>
@@ -494,7 +654,11 @@ export default function PartsPage() {
                       step="0.01"
                       value={partForm.price}
                       onChange={(e) => setPartForm({ ...partForm, price: Number.parseFloat(e.target.value) })}
+                      disabled={partForm.isVehicleSpecific}
                     />
+                    {partForm.isVehicleSpecific && (
+                      <p className="text-xs text-gray-500 mt-1">Price will be set per vehicle</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price (£)</label>
@@ -528,6 +692,19 @@ export default function PartsPage() {
                     />
                   </div>
                 </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="editIsVehicleSpecific"
+                    checked={partForm.isVehicleSpecific}
+                    onChange={(e) => setPartForm({ ...partForm, isVehicleSpecific: e.target.checked })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="editIsVehicleSpecific" className="ml-2 block text-sm text-gray-900">
+                    Vehicle-specific part (price varies by vehicle)
+                  </label>
+                </div>
               </div>
 
               <div className="flex justify-end space-x-2 mt-6">
@@ -536,7 +713,9 @@ export default function PartsPage() {
                 </Button>
                 <Button
                   onClick={submitEditPartForm}
-                  disabled={!partForm.name || !partForm.category || partForm.price <= 0}
+                  disabled={
+                    !partForm.name || !partForm.category || (!partForm.isVehicleSpecific && partForm.price <= 0)
+                  }
                 >
                   Save Changes
                 </Button>
