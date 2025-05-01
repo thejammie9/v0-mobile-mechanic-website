@@ -1,37 +1,68 @@
 import type React from "react"
 import Link from "next/link"
-import type { Metadata } from "next"
+import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
+import { AdminWarningBanner } from "@/components/admin-warning-banner"
 
-export const metadata: Metadata = {
-  title: "Admin Dashboard | Jamie's Auto Care",
-  description: "Admin dashboard for Jamie's Auto Care",
-}
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  // Check authentication
+  const cookieStore = cookies()
+  const adminAuth = cookieStore.get("admin_auth")
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  if (!adminAuth) {
+    redirect("/admin/login")
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
-      <header className="bg-blue-950 text-white shadow">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <Link href="/admin" className="font-bold text-xl">
-              Jamie's Auto Care Admin
-            </Link>
+      <nav className="bg-blue-900 text-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex">
+              <div className="flex-shrink-0 flex items-center">
+                <span className="text-xl font-bold">Jamie's Auto Care</span>
+              </div>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <Link
+                  href="/admin/bookings"
+                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium hover:border-gray-300 hover:text-gray-200"
+                >
+                  Bookings
+                </Link>
+                <Link
+                  href="/admin/settings"
+                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium hover:border-gray-300 hover:text-gray-200"
+                >
+                  Settings
+                </Link>
+              </div>
+            </div>
+            <div className="hidden sm:ml-6 sm:flex sm:items-center">
+              <Link
+                href="/admin/logout"
+                className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-800 hover:bg-blue-700"
+              >
+                Logout
+              </Link>
+            </div>
           </div>
-          <nav className="flex space-x-4">
-            <Link href="/admin/bookings" className="hover:text-orange-300">
-              Bookings
-            </Link>
-            <Link href="/admin/settings" className="hover:text-orange-300">
-              Settings
-            </Link>
-            <Link href="/admin/logout" className="hover:text-orange-300">
-              Logout
-            </Link>
-          </nav>
         </div>
-      </header>
+      </nav>
 
-      <main className="container mx-auto px-4 py-8">{children}</main>
+      <div className="py-10">
+        <main>
+          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            {/* Add the warning banner */}
+            <AdminWarningBanner />
+
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
