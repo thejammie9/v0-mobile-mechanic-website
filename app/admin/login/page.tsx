@@ -4,35 +4,41 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Loader2, Info } from "lucide-react"
 import { loginAdmin } from "@/app/actions/auth-actions"
 
 export default function AdminLogin() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [debugInfo, setDebugInfo] = useState("")
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+    setDebugInfo("Submitting form...")
 
     try {
-      const result = await loginAdmin(new FormData(e.target as HTMLFormElement))
+      // Create a FormData object
+      const formData = new FormData()
+      formData.append("password", password)
+
+      // Call the server action
+      setDebugInfo("Calling loginAdmin...")
+      const result = await loginAdmin(formData)
+      setDebugInfo(`Result: ${JSON.stringify(result)}`)
 
       if (result.success) {
-        router.push("/admin/bookings")
-        router.refresh()
+        setDebugInfo("Login successful, redirecting...")
+        // Force a hard navigation instead of client-side navigation
+        window.location.href = "/admin/bookings"
       } else {
         setError(result.error || "Invalid password")
       }
     } catch (err) {
-      setError("An error occurred. Please try again.")
+      console.error("Login error:", err)
+      setError(`An error occurred: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       setLoading(false)
     }
@@ -47,44 +53,49 @@ export default function AdminLogin() {
         </div>
 
         {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
+          <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-md mb-6">
+            <p>{error}</p>
+          </div>
         )}
 
         {/* Testing credentials notice */}
-        <Alert variant="info" className="bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-500" />
-          <AlertDescription className="text-blue-700">
+        <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-md mb-6">
+          <p>
             <strong>For testing:</strong> Use password <code className="bg-blue-100 px-1 rounded">admin123</code>
-          </AlertDescription>
-        </Alert>
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
               id="password"
               name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
               required
             />
           </div>
 
-          <Button type="submit" className="w-full bg-blue-900 hover:bg-blue-800" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Logging in...
-              </>
-            ) : (
-              "Login"
-            )}
-          </Button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
         </form>
+
+        {/* Debug information - remove in production */}
+        {debugInfo && (
+          <div className="mt-4 p-2 bg-gray-100 rounded text-xs font-mono">
+            <p>Debug: {debugInfo}</p>
+          </div>
+        )}
       </div>
     </div>
   )
