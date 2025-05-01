@@ -1,0 +1,136 @@
+@media print {
+  /* Hide everything except the invoice content */
+  body > *:not(#print-content) {
+    display: none !important;
+  }
+
+  #print-content {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Reset page margins */
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+
+  /* Typography */
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+    line-height: 1.4;
+    color: #333;
+  }
+
+  /* Layout */
+  .invoice-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+  }
+
+  .company-details {
+    width: 50%;
+  }
+
+  .invoice-details {
+    width: 50%;
+    text-align: right;
+  }
+
+  .invoice-title {
+    font-size: 24pt;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #2563eb;
+  }
+
+  .customer-details {
+    margin-bottom: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+  }
+
+  th {
+    background-color: #f3f4f6 !important;
+    text-align: left;
+    padding: 10px;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+    -webkit-print-color-adjust: exact;
+  }
+
+  td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  /* Totals */
+  .totals {
+    width: 300px;
+    margin-left: auto;
+  }
+
+  .totals-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+  }
+
+  .totals-row.final {
+    font-weight: bold;
+    border-top: 2px solid #ddd;
+    padding-top: 10px;
+  }
+
+  /* Footer */
+  .payment-terms {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+  }
+
+  .section-title {
+    font-size: 16pt;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #2563eb;
+  }
+
+  /* No page breaks inside elements */
+  table,
+  tr,
+  td,
+  th,
+  .invoice-header,
+  .customer-details,
+  .totals,
+  .payment-terms {
+    page-break-inside: avoid;
+  }
+
+  /* Force page breaks where needed */
+  .page-break {
+    page-break-before: always;
+  }
+
+  /* Hide buttons and UI elements */
+  button,
+  .actions,
+  .navigation,
+  nav,
+  header,
+  footer {
+    display: none !important;
+  }
+}
