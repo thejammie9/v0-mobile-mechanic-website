@@ -18,71 +18,6 @@ const mockCustomers = [
   { id: "cust_1005", name: "David Taylor", email: "david@example.com", phone: "07654321987" },
 ]
 
-// Mock data for invoices
-const mockInvoices = [
-  {
-    id: "INV-2025-001",
-    customerId: "cust_1001",
-    customerName: "John Smith",
-    date: "2025-05-15",
-    dueDate: "2025-05-29",
-    items: [
-      { description: "Engine repair", hours: 3, hourlyRate: 45, parts: 75, total: 210 },
-      { description: "Oil change", hours: 0.5, hourlyRate: 45, parts: 25, total: 47.5 },
-    ],
-    subtotal: 257.5,
-    tax: 51.5,
-    total: 309,
-    status: "paid",
-    paidDate: "2025-05-20",
-  },
-  {
-    id: "INV-2025-002",
-    customerId: "cust_1002",
-    customerName: "Sarah Johnson",
-    date: "2025-05-16",
-    dueDate: "2025-05-30",
-    items: [{ description: "Brake pad replacement", hours: 1.5, hourlyRate: 45, parts: 120, total: 187.5 }],
-    subtotal: 187.5,
-    tax: 37.5,
-    total: 225,
-    status: "pending",
-    paidDate: null,
-  },
-  {
-    id: "INV-2025-003",
-    customerId: "cust_1003",
-    customerName: "Michael Brown",
-    date: "2025-05-14",
-    dueDate: "2025-05-28",
-    items: [
-      { description: "Battery replacement", hours: 0.5, hourlyRate: 45, parts: 85, total: 107.5 },
-      { description: "Electrical system check", hours: 1, hourlyRate: 45, parts: 0, total: 45 },
-    ],
-    subtotal: 152.5,
-    tax: 30.5,
-    total: 183,
-    status: "paid",
-    paidDate: "2025-05-18",
-  },
-  {
-    id: "INV-2025-004",
-    customerId: "cust_1004",
-    customerName: "Emma Wilson",
-    date: "2025-05-13",
-    dueDate: "2025-05-27",
-    items: [
-      { description: "Full service", hours: 2, hourlyRate: 45, parts: 45, total: 135 },
-      { description: "Air filter replacement", hours: 0.25, hourlyRate: 45, parts: 15, total: 26.25 },
-    ],
-    subtotal: 161.25,
-    tax: 32.25,
-    total: 193.5,
-    status: "overdue",
-    paidDate: null,
-  },
-]
-
 // Mock data for parts
 const mockParts = [
   { id: "part_001", name: "Oil Filter", price: 15 },
@@ -97,6 +32,99 @@ const mockParts = [
   { id: "part_010", name: "Timing Belt Kit", price: 120 },
 ]
 
+// Mock data for invoices - updated structure with separate labor and parts
+const mockInvoices = [
+  {
+    id: "INV-2025-001",
+    customerId: "cust_1001",
+    customerName: "John Smith",
+    date: "2025-05-15",
+    dueDate: "2025-05-29",
+    labor: [
+      { description: "Engine repair", hours: 3, hourlyRate: 45, total: 135 },
+      { description: "Oil change", hours: 0.5, hourlyRate: 45, total: 22.5 },
+    ],
+    parts: [
+      { name: "Oil Filter", quantity: 1, price: 15, total: 15 },
+      { name: "Engine Oil (5L)", quantity: 1, price: 35, total: 35 },
+      { name: "Gasket", quantity: 2, price: 12.5, total: 25 },
+    ],
+    subtotal: 232.5,
+    tax: 46.5,
+    total: 279,
+    status: "paid",
+    paidDate: "2025-05-20",
+  },
+  {
+    id: "INV-2025-002",
+    customerId: "cust_1002",
+    customerName: "Sarah Johnson",
+    date: "2025-05-16",
+    dueDate: "2025-05-30",
+    labor: [{ description: "Brake pad replacement", hours: 1.5, hourlyRate: 45, total: 67.5 }],
+    parts: [
+      { name: "Brake Pads (Front)", quantity: 1, price: 45, total: 45 },
+      { name: "Brake Fluid", quantity: 1, price: 12, total: 12 },
+    ],
+    subtotal: 124.5,
+    tax: 24.9,
+    total: 149.4,
+    status: "pending",
+    paidDate: null,
+  },
+  {
+    id: "INV-2025-003",
+    customerId: "cust_1003",
+    customerName: "Michael Brown",
+    date: "2025-05-14",
+    dueDate: "2025-05-28",
+    labor: [
+      { description: "Battery replacement", hours: 0.5, hourlyRate: 45, total: 22.5 },
+      { description: "Electrical system check", hours: 1, hourlyRate: 45, total: 45 },
+    ],
+    parts: [{ name: "Battery", quantity: 1, price: 85, total: 85 }],
+    subtotal: 152.5,
+    tax: 30.5,
+    total: 183,
+    status: "paid",
+    paidDate: "2025-05-18",
+  },
+  {
+    id: "INV-2025-004",
+    customerId: "cust_1004",
+    customerName: "Emma Wilson",
+    date: "2025-05-13",
+    dueDate: "2025-05-27",
+    labor: [
+      { description: "Full service", hours: 2, hourlyRate: 45, total: 90 },
+      { description: "Air filter replacement", hours: 0.25, hourlyRate: 45, total: 11.25 },
+    ],
+    parts: [
+      { name: "Oil Filter", quantity: 1, price: 15, total: 15 },
+      { name: "Air Filter", quantity: 1, price: 12, total: 12 },
+      { name: "Engine Oil (5L)", quantity: 1, price: 35, total: 35 },
+      { name: "Cabin Filter", quantity: 1, price: 18, total: 18 },
+    ],
+    subtotal: 181.25,
+    tax: 36.25,
+    total: 217.5,
+    status: "overdue",
+    paidDate: null,
+  },
+]
+
+// Company details
+const companyDetails = {
+  name: "Jamie's Auto Care",
+  address: "123 Main Street",
+  city: "Edinburgh",
+  postcode: "EH1 1AA",
+  phone: "07123456789",
+  email: "info@jamiesautocare.com",
+  companyNumber: "SC123456", // Added company number
+  vatNumber: "GB123456789",
+}
+
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState(mockInvoices)
   const [searchTerm, setSearchTerm] = useState("")
@@ -108,7 +136,8 @@ export default function InvoicesPage() {
     customerId: "",
     date: new Date().toISOString().split("T")[0],
     dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    items: [{ description: "", hours: 0, hourlyRate: 45, parts: 0, total: 0 }],
+    labor: [{ description: "", hours: 0, hourlyRate: 45, total: 0 }],
+    parts: [],
     subtotal: 0,
     tax: 0,
     total: 0,
@@ -153,53 +182,98 @@ export default function InvoicesPage() {
     setIsCreateModalOpen(true)
   }
 
-  // Handle add item to invoice
-  const handleAddItem = () => {
+  // Handle add labor item to invoice
+  const handleAddLaborItem = () => {
     setNewInvoice({
       ...newInvoice,
-      items: [...newInvoice.items, { description: "", hours: 0, hourlyRate: 45, parts: 0, total: 0 }],
+      labor: [...newInvoice.labor, { description: "", hours: 0, hourlyRate: 45, total: 0 }],
     })
   }
 
-  // Handle remove item from invoice
-  const handleRemoveItem = (index) => {
-    const updatedItems = [...newInvoice.items]
-    updatedItems.splice(index, 1)
+  // Handle remove labor item from invoice
+  const handleRemoveLaborItem = (index) => {
+    const updatedLabor = [...newInvoice.labor]
+    updatedLabor.splice(index, 1)
 
     // Recalculate totals
-    const subtotal = updatedItems.reduce((sum, item) => sum + item.total, 0)
-    const tax = subtotal * 0.2 // 20% tax
-
-    setNewInvoice({
-      ...newInvoice,
-      items: updatedItems,
-      subtotal,
-      tax,
-      total: subtotal + tax,
-    })
+    updateInvoiceTotals(updatedLabor, newInvoice.parts)
   }
 
-  // Handle item change
-  const handleItemChange = (index, field, value) => {
-    const updatedItems = [...newInvoice.items]
+  // Handle labor item change
+  const handleLaborItemChange = (index, field, value) => {
+    const updatedLabor = [...newInvoice.labor]
 
     // Update the specific field
-    updatedItems[index][field] = value
+    updatedLabor[index][field] = value
 
     // Recalculate the total for this item
-    const hours = Number.parseFloat(updatedItems[index].hours) || 0
-    const hourlyRate = Number.parseFloat(updatedItems[index].hourlyRate) || 0
-    const parts = Number.parseFloat(updatedItems[index].parts) || 0
+    const hours = Number.parseFloat(updatedLabor[index].hours) || 0
+    const hourlyRate = Number.parseFloat(updatedLabor[index].hourlyRate) || 0
 
-    updatedItems[index].total = hours * hourlyRate + parts
+    updatedLabor[index].total = hours * hourlyRate
 
     // Recalculate invoice totals
-    const subtotal = updatedItems.reduce((sum, item) => sum + item.total, 0)
+    updateInvoiceTotals(updatedLabor, newInvoice.parts)
+  }
+
+  // Handle adding a part to the invoice
+  const handleAddPart = (part) => {
+    const updatedParts = [...newInvoice.parts]
+
+    // Check if part already exists in the invoice
+    const existingPartIndex = updatedParts.findIndex((p) => p.name === part.name)
+
+    if (existingPartIndex >= 0) {
+      // Increment quantity if part already exists
+      updatedParts[existingPartIndex].quantity += 1
+      updatedParts[existingPartIndex].total =
+        updatedParts[existingPartIndex].quantity * updatedParts[existingPartIndex].price
+    } else {
+      // Add new part if it doesn't exist
+      updatedParts.push({
+        name: part.name,
+        quantity: 1,
+        price: part.price,
+        total: part.price,
+      })
+    }
+
+    // Recalculate invoice totals
+    updateInvoiceTotals(newInvoice.labor, updatedParts)
+  }
+
+  // Handle removing a part from the invoice
+  const handleRemovePart = (index) => {
+    const updatedParts = [...newInvoice.parts]
+    updatedParts.splice(index, 1)
+
+    // Recalculate invoice totals
+    updateInvoiceTotals(newInvoice.labor, updatedParts)
+  }
+
+  // Handle part quantity change
+  const handlePartQuantityChange = (index, quantity) => {
+    const updatedParts = [...newInvoice.parts]
+
+    updatedParts[index].quantity = quantity
+    updatedParts[index].total = updatedParts[index].price * quantity
+
+    // Recalculate invoice totals
+    updateInvoiceTotals(newInvoice.labor, updatedParts)
+  }
+
+  // Update invoice totals
+  const updateInvoiceTotals = (labor, parts) => {
+    const laborTotal = labor.reduce((sum, item) => sum + item.total, 0)
+    const partsTotal = parts.reduce((sum, item) => sum + item.total, 0)
+
+    const subtotal = laborTotal + partsTotal
     const tax = subtotal * 0.2 // 20% tax
 
     setNewInvoice({
       ...newInvoice,
-      items: updatedItems,
+      labor,
+      parts,
       subtotal,
       tax,
       total: subtotal + tax,
@@ -240,7 +314,8 @@ export default function InvoicesPage() {
       customerName: customerName,
       date: newInvoice.date,
       dueDate: newInvoice.dueDate,
-      items: newInvoice.items,
+      labor: newInvoice.labor,
+      parts: newInvoice.parts,
       subtotal: newInvoice.subtotal,
       tax: newInvoice.tax,
       total: newInvoice.total,
@@ -256,7 +331,8 @@ export default function InvoicesPage() {
       customerId: "",
       date: new Date().toISOString().split("T")[0],
       dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      items: [{ description: "", hours: 0, hourlyRate: 45, parts: 0, total: 0 }],
+      labor: [{ description: "", hours: 0, hourlyRate: 45, total: 0 }],
+      parts: [],
       subtotal: 0,
       tax: 0,
       total: 0,
@@ -556,13 +632,13 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                {/* Invoice Items */}
+                {/* Labor Items */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-medium">Invoice Items</h3>
-                    <Button size="sm" onClick={handleAddItem}>
+                    <h3 className="text-lg font-medium">Labor</h3>
+                    <Button size="sm" onClick={handleAddLaborItem}>
                       <Plus className="h-4 w-4 mr-1" />
-                      Add Item
+                      Add Labor Item
                     </Button>
                   </div>
 
@@ -577,19 +653,18 @@ export default function InvoicesPage() {
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                             Rate (£/h)
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Parts (£)</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total (£)</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"></th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {newInvoice.items.map((item, index) => (
+                        {newInvoice.labor.map((item, index) => (
                           <tr key={index}>
                             <td className="px-4 py-2">
                               <Input
                                 value={item.description}
-                                onChange={(e) => handleItemChange(index, "description", e.target.value)}
-                                placeholder="Service description"
+                                onChange={(e) => handleLaborItemChange(index, "description", e.target.value)}
+                                placeholder="Labor description"
                               />
                             </td>
                             <td className="px-4 py-2">
@@ -598,7 +673,9 @@ export default function InvoicesPage() {
                                 min="0"
                                 step="0.25"
                                 value={item.hours}
-                                onChange={(e) => handleItemChange(index, "hours", Number.parseFloat(e.target.value))}
+                                onChange={(e) =>
+                                  handleLaborItemChange(index, "hours", Number.parseFloat(e.target.value))
+                                }
                               />
                             </td>
                             <td className="px-4 py-2">
@@ -607,27 +684,19 @@ export default function InvoicesPage() {
                                 min="0"
                                 value={item.hourlyRate}
                                 onChange={(e) =>
-                                  handleItemChange(index, "hourlyRate", Number.parseFloat(e.target.value))
+                                  handleLaborItemChange(index, "hourlyRate", Number.parseFloat(e.target.value))
                                 }
-                              />
-                            </td>
-                            <td className="px-4 py-2">
-                              <Input
-                                type="number"
-                                min="0"
-                                value={item.parts}
-                                onChange={(e) => handleItemChange(index, "parts", Number.parseFloat(e.target.value))}
                               />
                             </td>
                             <td className="px-4 py-2">
                               <div className="py-2 px-3 bg-gray-50 rounded">{formatCurrency(item.total)}</div>
                             </td>
                             <td className="px-4 py-2">
-                              {newInvoice.items.length > 1 && (
+                              {newInvoice.labor.length > 1 && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleRemoveItem(index)}
+                                  onClick={() => handleRemoveLaborItem(index)}
                                   className="text-red-500 hover:text-red-700"
                                 >
                                   <Trash className="h-4 w-4" />
@@ -641,44 +710,73 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                {/* Parts Selector */}
+                {/* Parts Section */}
                 <div>
-                  <h3 className="text-lg font-medium mb-2">Parts Catalog</h3>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-medium">Parts</h3>
+                  </div>
+
+                  {/* Selected Parts Table */}
+                  {newInvoice.parts.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden mb-4">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                              Part Name
+                            </th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                              Quantity
+                            </th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                              Price (£)
+                            </th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                              Total (£)
+                            </th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {newInvoice.parts.map((part, index) => (
+                            <tr key={index}>
+                              <td className="px-4 py-2">{part.name}</td>
+                              <td className="px-4 py-2">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={part.quantity}
+                                  onChange={(e) => handlePartQuantityChange(index, Number.parseInt(e.target.value))}
+                                  className="w-20"
+                                />
+                              </td>
+                              <td className="px-4 py-2">{formatCurrency(part.price)}</td>
+                              <td className="px-4 py-2">{formatCurrency(part.total)}</td>
+                              <td className="px-4 py-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemovePart(index)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Parts Catalog */}
+                  <h4 className="text-md font-medium mb-2">Parts Catalog</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                     {mockParts.map((part) => (
                       <div
                         key={part.id}
                         className="border rounded p-2 flex justify-between items-center cursor-pointer hover:bg-gray-50"
-                        onClick={() => {
-                          // Add part to the last item in the list
-                          const lastItemIndex = newInvoice.items.length - 1
-                          const updatedItems = [...newInvoice.items]
-
-                          // Update the description if it's empty
-                          if (!updatedItems[lastItemIndex].description) {
-                            updatedItems[lastItemIndex].description = part.name
-                          }
-
-                          // Add the part price
-                          updatedItems[lastItemIndex].parts += part.price
-
-                          // Recalculate the total
-                          const hours = Number.parseFloat(updatedItems[lastItemIndex].hours) || 0
-                          const hourlyRate = Number.parseFloat(updatedItems[lastItemIndex].hourlyRate) || 0
-                          updatedItems[lastItemIndex].total = hours * hourlyRate + updatedItems[lastItemIndex].parts
-
-                          // Recalculate invoice totals
-                          const subtotal = updatedItems.reduce((sum, item) => sum + item.total, 0)
-                          const tax = subtotal * 0.2 // 20% tax
-
-                          setNewInvoice({
-                            ...newInvoice,
-                            items: updatedItems,
-                            subtotal,
-                            tax,
-                            total: subtotal + tax,
-                          })
-                        }}
+                        onClick={() => handleAddPart(part)}
                       >
                         <span>{part.name}</span>
                         <span className="font-medium">{formatCurrency(part.price)}</span>
@@ -717,7 +815,7 @@ export default function InvoicesPage() {
                   disabled={
                     (!isNewCustomer && !newInvoice.customerId) ||
                     (isNewCustomer && !newCustomer.name) ||
-                    newInvoice.items.some((item) => !item.description) ||
+                    newInvoice.labor.some((item) => !item.description) ||
                     newInvoice.total === 0
                   }
                 >
@@ -754,11 +852,15 @@ export default function InvoicesPage() {
               <div className="border rounded-lg p-6 mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-bold mb-2">Jamie's Auto Care</h3>
-                    <p className="text-gray-600">123 Main Street</p>
-                    <p className="text-gray-600">Edinburgh, EH1 1AA</p>
-                    <p className="text-gray-600">Phone: 07123456789</p>
-                    <p className="text-gray-600">Email: info@jamiesautocare.com</p>
+                    <h3 className="text-lg font-bold mb-2">{companyDetails.name}</h3>
+                    <p className="text-gray-600">{companyDetails.address}</p>
+                    <p className="text-gray-600">
+                      {companyDetails.city}, {companyDetails.postcode}
+                    </p>
+                    <p className="text-gray-600">Phone: {companyDetails.phone}</p>
+                    <p className="text-gray-600">Email: {companyDetails.email}</p>
+                    <p className="text-gray-600">Company No: {companyDetails.companyNumber}</p>
+                    <p className="text-gray-600">VAT No: {companyDetails.vatNumber}</p>
                   </div>
                   <div className="text-right">
                     <h3 className="text-lg font-bold mb-2">Invoice Details</h3>
@@ -788,8 +890,9 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
+              {/* Labor Section */}
               <div className="mb-6">
-                <h3 className="text-lg font-bold mb-2">Invoice Items</h3>
+                <h3 className="text-lg font-bold mb-2">Labor</h3>
                 <div className="border rounded-lg overflow-hidden">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -804,7 +907,43 @@ export default function InvoicesPage() {
                           Rate (£/h)
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Parts (£)
+                          Total (£)
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {selectedInvoice.labor.map((item, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.description}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.hours}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatCurrency(item.hourlyRate)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {formatCurrency(item.total)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Parts Section */}
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-2">Parts</h3>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Part Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Quantity
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Price (£)
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Total (£)
@@ -812,18 +951,15 @@ export default function InvoicesPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {selectedInvoice.items.map((item, index) => (
+                      {selectedInvoice.parts.map((part, index) => (
                         <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.description}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.hours}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{part.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{part.quantity}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatCurrency(item.hourlyRate)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatCurrency(item.parts)}
+                            {formatCurrency(part.price)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {formatCurrency(item.total)}
+                            {formatCurrency(part.total)}
                           </td>
                         </tr>
                       ))}
@@ -853,7 +989,9 @@ export default function InvoicesPage() {
 
               <div className="mt-6 border-t pt-6">
                 <div className="text-gray-600 text-sm">
-                  <p className="mb-2">Payment Terms: Payment due within 14 days of invoice date.</p>
+                  <p className="mb-2">
+                    <strong>Payment Terms:</strong> Payment is due upon receipt.
+                  </p>
                   <p>Thank you for your business!</p>
                 </div>
               </div>
