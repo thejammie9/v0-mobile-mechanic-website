@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { loginAdmin } from "@/app/actions/auth-actions"
 import { useRouter } from "next/navigation"
 
@@ -11,6 +11,17 @@ export default function AdminLoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  // Client-side cookie check
+  useEffect(() => {
+    // Check if the admin_logged_in cookie exists
+    const hasAdminCookie = document.cookie.split(";").some((item) => item.trim().startsWith("admin_logged_in="))
+
+    // If logged in, redirect to admin dashboard
+    if (hasAdminCookie) {
+      router.push("/admin")
+    }
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

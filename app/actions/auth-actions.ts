@@ -22,7 +22,8 @@ export async function loginAdmin(formData: FormData) {
 
     if (password === correctPassword) {
       // Set a simple flag cookie that indicates the user is logged in
-      cookies().set("admin_logged_in", "true", {
+      const cookieStore = cookies()
+      cookieStore.set("admin_logged_in", "true", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 7, // 7 days
@@ -44,6 +45,7 @@ export async function loginAdmin(formData: FormData) {
 
 export async function logoutAdmin() {
   // Delete the auth cookie
-  cookies().delete("admin_logged_in")
+  const cookieStore = cookies()
+  cookieStore.delete("admin_logged_in")
   return { success: true }
 }

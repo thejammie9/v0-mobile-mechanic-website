@@ -11,7 +11,7 @@ export default function LogoutPage() {
     const performLogout = async () => {
       await logoutAdmin()
       // Redirect to login page
-      window.location.href = "/admin/login"
+      router.push("/admin/login")
     }
 
     performLogout()

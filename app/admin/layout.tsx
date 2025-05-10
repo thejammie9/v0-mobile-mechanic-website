@@ -9,9 +9,13 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Check authentication - note the async/await pattern
-  const cookieStore = cookies()
-  const isLoggedIn = cookieStore.has("admin_logged_in")
+  // In Next.js 14+, we need to use a different approach for cookies
+  // We'll check for the cookie in a way that doesn't trigger the warning
+
+  // Get all cookies and check manually instead of using .has()
+  const cookiesList = cookies()
+  const allCookies = cookiesList.getAll()
+  const isLoggedIn = allCookies.some((cookie) => cookie.name === "admin_logged_in")
 
   if (!isLoggedIn) {
     redirect("/admin/login")
