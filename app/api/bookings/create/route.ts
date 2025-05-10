@@ -114,6 +114,10 @@ export async function POST(request: Request) {
       }
     }
 
+    // Format the current date in MySQL format (YYYY-MM-DD HH:MM:SS)
+    const now = new Date()
+    const mysqlDatetime = now.toISOString().slice(0, 19).replace("T", " ")
+
     // Save to database
     try {
       await query(
@@ -130,7 +134,7 @@ export async function POST(request: Request) {
           bookingData.date,
           bookingData.timeSlot,
           "pending",
-          new Date().toISOString(),
+          mysqlDatetime, // Use MySQL formatted datetime
           cancellationToken,
           bookingData.address || "",
           bookingData.postcode || "",
@@ -156,7 +160,7 @@ export async function POST(request: Request) {
       id: bookingId,
       cancellationToken,
       status: "pending",
-      created_at: new Date().toISOString(),
+      created_at: mysqlDatetime,
     }
 
     // Send emails
@@ -174,7 +178,7 @@ export async function POST(request: Request) {
         id: bookingId,
         ...bookingData,
         status: "pending",
-        created_at: new Date().toISOString(),
+        created_at: mysqlDatetime,
       },
       reference,
     })

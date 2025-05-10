@@ -3,8 +3,122 @@ import { Button } from "@/components/ui/button"
 import { AdminWarningBanner } from "@/components/admin-warning-banner"
 import Link from "next/link"
 import { Calendar, Settings, BarChart3, Users, Car, Clock, CheckCircle, XCircle } from "lucide-react"
+import { query } from "@/lib/db"
 
-export default function AdminDashboardPage() {
+// Function to fetch recent bookings
+async function getRecentBookings() {
+  try {
+    const bookings = await query(`SELECT * FROM bookings ORDER BY created_at DESC LIMIT 3`)
+    return bookings || []
+  } catch (error) {
+    console.error("Error fetching recent bookings:", error)
+    return []
+  }
+}
+
+// Function to fetch booking stats
+async function getBookingStats() {
+  try {
+    const totalCustomers = await query(`SELECT COUNT(DISTINCT email) as count FROM bookings`)
+
+    const jobsThisMonth = await query(
+      `SELECT COUNT(*) as count FROM bookings 
+       WHERE DATE_FORMAT(STR_TO_DATE(booking_date, '%Y-%m-%d'), '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')`,
+    )
+
+    const completedJobs = await query(`SELECT COUNT(*) as count FROM bookings WHERE status = 'completed'`)
+
+    const cancelledJobs = await query(`SELECT COUNT(*) as count FROM bookings WHERE status = 'cancelled'`)
+
+    const totalJobs = await query(`SELECT COUNT(*) as count FROM bookings`)
+
+    // Calculate rates
+    const completionRate = totalJobs[0].count > 0 ? Math.round((completedJobs[0].count / totalJobs[0].count) * 100) : 0
+
+    const cancellationRate =
+      totalJobs[0].count > 0 ? Math.round((cancelledJobs[0].count / totalJobs[0].count) * 100) : 0
+
+    return {
+      totalCustomers: totalCustomers[0].count || 0,
+      jobsThisMonth: jobsThisMonth[0].count || 0,
+      completionRate: completionRate || 0,
+      cancellationRate: cancellationRate || 0,
+    }
+  } catch (error) {
+    console.error("Error fetching booking stats:", error)
+    return {
+      totalCustomers: 0,
+      jobsThisMonth: 0,
+      completionRate: 0,
+      cancellationRate: 0,
+    }
+  }
+}
+
+// Function to get popular services
+async function getPopularServices() {
+  try {
+    const services = await query(
+      `SELECT service_type, COUNT(*) as count 
+       FROM bookings 
+       WHERE service_type IS NOT NULL AND service_type != ''
+       GROUP BY service_type 
+       ORDER BY count DESC 
+       LIMIT 5`,
+    )
+
+    // Calculate percentages
+    const totalServices = services.reduce((sum: number, service: any) => sum + service.count, 0)
+
+    return services.map((service: any) => ({
+      name: service.service_type,
+      percentage: totalServices > 0 ? Math.round((service.count / totalServices) * 100) : 0,
+    }))
+  } catch (error) {
+    console.error("Error fetching popular services:", error)
+    return []
+  }
+}
+
+// Format booking status for display
+function formatStatus(status: string) {
+  switch (status) {
+    case "pending":
+      return { text: "Pending", className: "bg-yellow-100 text-yellow-800" }
+    case "confirmed":
+      return { text: "Confirmed", className: "bg-blue-100 text-blue-800" }
+    case "completed":
+      return { text: "Completed", className: "bg-green-100 text-green-800" }
+    case "cancelled":
+      return { text: "Cancelled", className: "bg-red-100 text-red-800" }
+    default:
+      return { text: status, className: "bg-gray-100 text-gray-800" }
+  }
+}
+
+// Format date for display
+function formatDate(dateString: string) {
+  try {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) return "Today"
+    if (diffDays === 1) return "Yesterday"
+    if (diffDays < 7) return `${diffDays} days ago`
+
+    return date.toLocaleDateString()
+  } catch (e) {
+    return dateString
+  }
+}
+
+export default async function AdminDashboardPage() {
+  // Fetch data
+  const recentBookings = await getRecentBookings()
+  const stats = await getBookingStats()
+  const popularServices = await getPopularServices()
+
   return (
     <div className="space-y-6">
       <AdminWarningBanner />
@@ -83,62 +197,32 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-start space-x-4 border-b pb-4">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Clock className="h-5 w-5 text-blue-700" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <h4 className="font-medium">John Smith</h4>
-                    <span className="text-sm text-gray-500">Today</span>
+              {recentBookings.length > 0 ? (
+                recentBookings.map((booking: any) => (
+                  <div key={booking.id} className="flex items-start space-x-4 border-b pb-4">
+                    <div className="bg-blue-100 p-2 rounded-full">
+                      <Clock className="h-5 w-5 text-blue-700" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h4 className="font-medium">{booking.name}</h4>
+                        <span className="text-sm text-gray-500">{formatDate(booking.created_at)}</span>
+                      </div>
+                      <p className="text-sm text-gray-600">{booking.vehicle}</p>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${formatStatus(booking.status).className}`}>
+                          {formatStatus(booking.status).text}
+                        </span>
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link href={`/admin/bookings?id=${booking.id}`}>View</Link>
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600">Ford Focus 2018 - Engine noise</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Pending</span>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href="/admin/bookings">View</Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4 border-b pb-4">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Clock className="h-5 w-5 text-blue-700" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <h4 className="font-medium">Sarah Johnson</h4>
-                    <span className="text-sm text-gray-500">Yesterday</span>
-                  </div>
-                  <p className="text-sm text-gray-600">Audi A4 2020 - Brake pads</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Confirmed</span>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href="/admin/bookings">View</Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Clock className="h-5 w-5 text-blue-700" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <h4 className="font-medium">Michael Brown</h4>
-                    <span className="text-sm text-gray-500">2 days ago</span>
-                  </div>
-                  <p className="text-sm text-gray-600">Toyota Corolla 2017 - Battery issues</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Completed</span>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href="/admin/bookings">View</Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 py-4">No recent bookings found</p>
+              )}
             </div>
 
             <div className="mt-4 text-center">
@@ -161,7 +245,7 @@ export default function AdminDashboardPage() {
                   <Users className="h-5 w-5 text-gray-500" />
                   <span className="text-gray-600">Total Customers</span>
                 </div>
-                <span className="font-bold">24</span>
+                <span className="font-bold">{stats.totalCustomers}</span>
               </div>
 
               <div className="flex items-center justify-between border-b pb-4">
@@ -169,7 +253,7 @@ export default function AdminDashboardPage() {
                   <Car className="h-5 w-5 text-gray-500" />
                   <span className="text-gray-600">Jobs This Month</span>
                 </div>
-                <span className="font-bold">18</span>
+                <span className="font-bold">{stats.jobsThisMonth}</span>
               </div>
 
               <div className="flex items-center justify-between border-b pb-4">
@@ -177,7 +261,7 @@ export default function AdminDashboardPage() {
                   <CheckCircle className="h-5 w-5 text-gray-500" />
                   <span className="text-gray-600">Completion Rate</span>
                 </div>
-                <span className="font-bold">92%</span>
+                <span className="font-bold">{stats.completionRate}%</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -185,18 +269,22 @@ export default function AdminDashboardPage() {
                   <XCircle className="h-5 w-5 text-gray-500" />
                   <span className="text-gray-600">Cancellation Rate</span>
                 </div>
-                <span className="font-bold">8%</span>
+                <span className="font-bold">{stats.cancellationRate}%</span>
               </div>
             </div>
 
             <div className="mt-6 bg-blue-50 p-4 rounded-lg">
               <h4 className="font-medium text-blue-800 mb-2">Most Popular Services</h4>
               <ol className="list-decimal list-inside text-gray-700 space-y-1">
-                <li>Oil Change (32%)</li>
-                <li>Brake Repair (24%)</li>
-                <li>Battery Replacement (18%)</li>
-                <li>Tire Services (14%)</li>
-                <li>Engine Diagnostics (12%)</li>
+                {popularServices.length > 0 ? (
+                  popularServices.map((service: any, index: number) => (
+                    <li key={index}>
+                      {service.name} ({service.percentage}%)
+                    </li>
+                  ))
+                ) : (
+                  <li>No service data available</li>
+                )}
               </ol>
             </div>
           </CardContent>

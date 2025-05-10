@@ -15,7 +15,7 @@ export async function loginAdmin(formData: FormData) {
 
     if (!correctPassword) {
       console.error("ADMIN_PASSWORD environment variable is not set")
-      return { success: false, error: "Server configuration error" }
+      return { success: false, error: "Server configuration error: Admin password not configured" }
     }
 
     // Check if the password matches
