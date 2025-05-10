@@ -1,7 +1,6 @@
 "use server"
 
-// Default admin password for testing - REMOVE BEFORE PRODUCTION
-const DEFAULT_ADMIN_PASSWORD = "admin123"
+import { cookies } from "next/headers"
 
 export async function loginAdmin(formData: FormData) {
   try {
@@ -11,21 +10,29 @@ export async function loginAdmin(formData: FormData) {
       return { success: false, error: "Password is required" }
     }
 
-    // For debugging
-    console.log("Login attempt with password:", password)
-    console.log("Expected password from env:", process.env.ADMIN_PASSWORD)
+    // Get the admin password from environment variables
+    const correctPassword = process.env.ADMIN_PASSWORD
 
-    // Check password against environment variable or default
-    const correctPassword = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
+    if (!correctPassword) {
+      console.error("ADMIN_PASSWORD environment variable is not set")
+      return { success: false, error: "Server configuration error" }
+    }
 
+    // Check if the password matches
     if (password === correctPassword) {
-      console.log("Password is correct, returning success")
+      console.log("Password is correct, setting cookie")
 
-      // Return success - we'll set the cookie on the client side
-      return {
-        success: true,
-        message: "Logged in successfully",
-      }
+      // Set a cookie to indicate the user is logged in
+      cookies().set({
+        name: "admin_logged_in",
+        value: "true",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24, // 1 day
+        path: "/",
+      })
+
+      return { success: true, message: "Logged in successfully" }
     }
 
     console.log("Password is incorrect")
@@ -41,5 +48,6 @@ export async function loginAdmin(formData: FormData) {
 
 export async function logoutAdmin() {
   console.log("Logout action called")
+  cookies().delete("admin_logged_in")
   return { success: true }
 }

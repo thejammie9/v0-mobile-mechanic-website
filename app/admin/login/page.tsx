@@ -3,8 +3,20 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { loginAdmin } from "@/app/actions/auth-actions"
 import { useRouter } from "next/navigation"
+
+// Create a server action to check the password securely
+async function checkPassword(password: string) {
+  const response = await fetch("/api/admin/check-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ password }),
+  })
+
+  return response.json()
+}
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState("")
@@ -21,7 +33,7 @@ export default function AdminLoginPage() {
   useEffect(() => {
     addDebug("Checking for existing admin cookie")
     const cookies = document.cookie.split(";").map((c) => c.trim())
-    addDebug(`All cookies: ${cookies.join(", ")}`)
+    addDebug(`All cookies: ${cookies.length > 0 ? "Cookies present" : "No cookies"}`)
 
     const hasAdminCookie = cookies.some((c) => c.startsWith("admin_logged_in=true"))
     addDebug(`Has admin cookie: ${hasAdminCookie}`)
@@ -39,27 +51,24 @@ export default function AdminLoginPage() {
     addDebug(`Login attempt with password: ${password.replace(/./g, "*")}`)
 
     try {
-      const formData = new FormData()
-      formData.append("password", password)
-      const result = await loginAdmin(formData)
-      addDebug(`Login result: ${JSON.stringify(result)}`)
+      // Check password against environment variable using API
+      const result = await checkPassword(password)
 
       if (result.success) {
-        addDebug("Login successful, setting cookie")
+        addDebug("Password correct, setting cookie")
 
-        // Set the cookie with very permissive settings to ensure it works
-        document.cookie = "admin_logged_in=true; path=/; max-age=604800" // 7 days
+        // Set cookie with very simple format to avoid issues
+        document.cookie = "admin_logged_in=true; path=/; max-age=86400" // 1 day
 
         addDebug("Cookie set, checking if it exists")
-        const cookieSet = document.cookie.split(";").some((c) => c.trim().startsWith("admin_logged_in=true"))
+        const cookieSet = document.cookie.includes("admin_logged_in=true")
         addDebug(`Cookie exists after setting: ${cookieSet}`)
 
         // Force reload to ensure the cookie is applied
-        addDebug("Redirecting to admin dashboard")
         window.location.href = "/admin"
       } else {
-        addDebug(`Login failed: ${result.error}`)
-        setError(result.error || "Login failed")
+        addDebug("Password incorrect")
+        setError("Invalid password")
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err)
@@ -106,10 +115,6 @@ export default function AdminLoginPage() {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-
-        <div className="mt-4 text-center text-sm text-gray-600">
-          <p>Default password: admin123 (change in .env)</p>
-        </div>
 
         {/* Debug information */}
         <div className="mt-6 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-60">

@@ -1,55 +1,52 @@
 import mysql from "mysql2/promise"
 
-// Database connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "mobile_mechanic",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-})
+let pool: mysql.Pool | null = null
 
-// Execute a query with parameters
-export async function query(sql: string, params: any[] = []) {
+export async function initDatabase() {
   try {
-    const [results] = await pool.execute(sql, params)
+    if (!pool) {
+      console.log("Initializing database connection pool")
+
+      // Log database connection details (remove in production)
+      console.log("DB Connection Details:", {
+        host: process.env.DB_HOST || "localhost",
+        user: process.env.DB_USER || "root",
+        database: process.env.DB_NAME || "mobile_mechanic",
+        // Don't log password
+      })
+
+      pool = mysql.createPool({
+        host: process.env.DB_HOST || "localhost",
+        user: process.env.DB_USER || "root",
+        password: process.env.DB_PASSWORD || "",
+        database: process.env.DB_NAME || "mobile_mechanic",
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+      })
+
+      // Test the connection
+      const connection = await pool.getConnection()
+      console.log("Database connection successful")
+      connection.release()
+    }
+  } catch (error) {
+    console.error("Database initialization error:", error)
+    throw error
+  }
+}
+
+export async function query(sql: string, params: any[] = []) {
+  if (!pool) {
+    await initDatabase()
+  }
+
+  try {
+    console.log("Executing query:", sql.substring(0, 100) + "...")
+    const [results] = await pool!.execute(sql, params)
     return results
   } catch (error) {
     console.error("Database query error:", error)
     throw error
   }
-}
-
-// Initialize database tables
-export async function initDatabase() {
-  try {
-    // Create bookings table if it doesn't exist
-    await query(`
-      CREATE TABLE IF NOT EXISTS bookings (
-        id VARCHAR(50) PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) NOT NULL,
-        phone VARCHAR(20) NOT NULL,
-        vehicle VARCHAR(100) NOT NULL,
-        issue TEXT NOT NULL,
-        booking_date VARCHAR(50) NOT NULL,
-        time_slot VARCHAR(50) NOT NULL,
-        status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        cancellation_token VARCHAR(100)
-      )
-    `)
-
-    console.log("Database initialized successfully")
-  } catch (error) {
-    console.error("Failed to initialize database:", error)
-    throw error
-  }
-}
-
-// Initialize database on server start
-if (process.env.NODE_ENV !== "test") {
-  initDatabase().catch(console.error)
 }
