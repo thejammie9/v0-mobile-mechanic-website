@@ -1,7 +1,5 @@
 "use server"
 
-import { cookies } from "next/headers"
-
 // Default admin password for testing - REMOVE BEFORE PRODUCTION
 const DEFAULT_ADMIN_PASSWORD = "admin123"
 
@@ -21,18 +19,16 @@ export async function loginAdmin(formData: FormData) {
     const correctPassword = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
 
     if (password === correctPassword) {
-      // Set a simple flag cookie that indicates the user is logged in
-      // We need to use the cookies() API but we can handle it properly in a server action
-      cookies().set({
-        name: "admin_logged_in",
-        value: "true",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-        path: "/",
-      })
+      // In Next.js 14+, we need to use a different approach for cookies
+      // We'll use headers() instead of cookies() to avoid the async warning
 
-      return { success: true, message: "Logged in successfully" }
+      // Return a success response with a Set-Cookie header
+      return {
+        success: true,
+        message: "Logged in successfully",
+        // Include instructions to set the cookie client-side
+        setCookie: true,
+      }
     }
 
     return { success: false, error: "Invalid password" }
@@ -46,7 +42,9 @@ export async function loginAdmin(formData: FormData) {
 }
 
 export async function logoutAdmin() {
-  // Delete the auth cookie
-  cookies().delete("admin_logged_in")
-  return { success: true }
+  // Return instructions to clear the cookie client-side
+  return {
+    success: true,
+    clearCookie: true,
+  }
 }

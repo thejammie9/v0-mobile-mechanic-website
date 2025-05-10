@@ -34,7 +34,18 @@ export default function AdminLoginPage() {
       const result = await loginAdmin(formData)
 
       if (result.success) {
-        // Use window.location for a full page refresh to ensure cookies are properly set
+        // Set the cookie on the client side
+        if (result.setCookie) {
+          // Set cookie with 7-day expiration
+          const expiryDate = new Date()
+          expiryDate.setDate(expiryDate.getDate() + 7)
+
+          document.cookie = `admin_logged_in=true; expires=${expiryDate.toUTCString()}; path=/; ${
+            window.location.protocol === "https:" ? "secure;" : ""
+          } samesite=strict;`
+        }
+
+        // Redirect to admin dashboard
         window.location.href = "/admin"
       } else {
         setError(result.error || "Login failed")

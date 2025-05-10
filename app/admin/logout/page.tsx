@@ -9,9 +9,11 @@ export default function LogoutPage() {
 
   useEffect(() => {
     const performLogout = async () => {
-      await logoutAdmin()
-      // Clear the cookie on the client side as well
+      const result = await logoutAdmin()
+
+      // Clear the cookie on the client side
       document.cookie = "admin_logged_in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+
       // Redirect to login page
       window.location.href = "/admin/login"
     }
