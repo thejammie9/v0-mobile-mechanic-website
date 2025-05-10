@@ -35,20 +35,22 @@ CREATE TABLE customers (
 );
 
 -- Create bookings table
-CREATE TABLE bookings (
-  id VARCHAR(50) PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  email VARCHAR(100) NOT NULL,
-  phone VARCHAR(20) NOT NULL,
-  vehicle VARCHAR(100) NOT NULL,
-  issue TEXT NOT NULL,
-  booking_date VARCHAR(50) NOT NULL,
-  time_slot VARCHAR(50) NOT NULL,
-  status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  cancellation_token VARCHAR(100),
-  customer_id VARCHAR(50),
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+CREATE TABLE IF NOT EXISTS bookings (
+ id VARCHAR(50) PRIMARY KEY,
+ name VARCHAR(100) NOT NULL,
+ email VARCHAR(100) NOT NULL,
+ phone VARCHAR(20) NOT NULL,
+ vehicle VARCHAR(150) NOT NULL,
+ issue TEXT NOT NULL,
+ booking_date VARCHAR(50) NOT NULL,
+ time_slot VARCHAR(50) NOT NULL,
+ status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ cancellation_token VARCHAR(100),
+ address VARCHAR(255),
+ postcode VARCHAR(20),
+ service_type VARCHAR(100),
+ vehicle_reg VARCHAR(20)
 );
 
 -- Create parts table for inventory

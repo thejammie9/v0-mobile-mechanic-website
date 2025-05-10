@@ -14,6 +14,7 @@ export default function BookingForm() {
   const [vehicleMake, setVehicleMake] = useState("")
   const [vehicleModel, setVehicleModel] = useState("")
   const [vehicleYear, setVehicleYear] = useState("")
+  const [vehicleReg, setVehicleReg] = useState("") // New registration field
   const [serviceType, setServiceType] = useState("")
   const [description, setDescription] = useState("")
   const [date, setDate] = useState("")
@@ -53,6 +54,9 @@ export default function BookingForm() {
     setError("")
 
     try {
+      // Combine vehicle information into a single string for the API
+      const vehicleInfo = `${vehicleMake} ${vehicleModel} (${vehicleYear}) - Reg: ${vehicleReg}`.trim()
+
       const response = await fetch("/api/bookings/create", {
         method: "POST",
         headers: {
@@ -62,15 +66,13 @@ export default function BookingForm() {
           name,
           email,
           phone,
-          vehicleMake,
-          vehicleModel,
-          vehicleYear,
-          serviceType,
-          description,
+          vehicle: vehicleInfo, // Combined vehicle info
+          issue: description, // Map description to issue field
           date,
-          time,
+          timeSlot: time, // Map time to timeSlot field
           address,
           postcode,
+          serviceType,
         }),
       })
 
@@ -88,6 +90,7 @@ export default function BookingForm() {
       setVehicleMake("")
       setVehicleModel("")
       setVehicleYear("")
+      setVehicleReg("")
       setServiceType("")
       setDescription("")
       setDate("")
@@ -213,6 +216,21 @@ export default function BookingForm() {
                   value={vehicleYear}
                   onChange={(e) => setVehicleYear(e.target.value)}
                   required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="vehicleReg" className="block text-sm font-medium text-gray-700 mb-1">
+                  Registration Number *
+                </label>
+                <input
+                  type="text"
+                  id="vehicleReg"
+                  value={vehicleReg}
+                  onChange={(e) => setVehicleReg(e.target.value)}
+                  required
+                  placeholder="e.g. AB12 CDE"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>

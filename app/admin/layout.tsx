@@ -14,20 +14,33 @@ export default function AdminLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [isLoading, setIsLoading] = useState(true)
+  const [debugInfo, setDebugInfo] = useState<string[]>([])
+
+  const addDebug = (message: string) => {
+    console.log(`[AdminLayout] ${message}`)
+    setDebugInfo((prev) => [...prev, `${new Date().toISOString().split("T")[1].split(".")[0]}: ${message}`])
+  }
 
   useEffect(() => {
     // Skip authentication check for login page
     if (pathname === "/admin/login") {
+      addDebug("On login page, skipping auth check")
       setIsLoading(false)
       return
     }
 
-    // Check if the admin_logged_in cookie exists
-    const hasAdminCookie = document.cookie.split(";").some((item) => item.trim().startsWith("admin_logged_in=true"))
+    addDebug("Checking for admin cookie")
+    const cookies = document.cookie.split(";").map((c) => c.trim())
+    addDebug(`All cookies: ${cookies.join(", ")}`)
+
+    const hasAdminCookie = cookies.some((c) => c.startsWith("admin_logged_in=true"))
+    addDebug(`Has admin cookie: ${hasAdminCookie}`)
 
     if (!hasAdminCookie) {
+      addDebug("No admin cookie found, redirecting to login")
       router.push("/admin/login")
     } else {
+      addDebug("Admin cookie found, allowing access")
       setIsLoading(false)
     }
   }, [router, pathname])
@@ -117,13 +130,18 @@ export default function AdminLayout({
               >
                 View Website
               </Link>
-              <Link
-                href="/admin/logout"
+              <button
+                onClick={() => {
+                  // Clear the cookie on the client side
+                  document.cookie = "admin_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
+                  // Redirect to login page
+                  window.location.href = "/admin/login"
+                }}
                 className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-800 hover:bg-blue-700"
               >
                 <LogOut className="h-4 w-4 mr-1" />
                 Logout
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -131,7 +149,19 @@ export default function AdminLayout({
 
       <div className="py-10">
         <main>
-          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">{children}</div>
+          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            {children}
+
+            {/* Debug information */}
+            <div className="mt-6 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-60">
+              <p className="font-bold">Debug Info:</p>
+              {debugInfo.map((msg, i) => (
+                <div key={i} className="mt-1">
+                  {msg}
+                </div>
+              ))}
+            </div>
+          </div>
         </main>
       </div>
     </div>

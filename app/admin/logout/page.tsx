@@ -1,24 +1,21 @@
 "use client"
 
 import { useEffect } from "react"
-import { logoutAdmin } from "@/app/actions/auth-actions"
 import { useRouter } from "next/navigation"
 
 export default function LogoutPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const performLogout = async () => {
-      const result = await logoutAdmin()
+    console.log("[LogoutPage] Clearing admin cookie")
 
-      // Clear the cookie on the client side
-      document.cookie = "admin_logged_in=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    // Clear the cookie on the client side
+    document.cookie = "admin_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;"
 
-      // Redirect to login page
-      window.location.href = "/admin/login"
-    }
+    console.log("[LogoutPage] Cookie cleared, redirecting to login")
 
-    performLogout()
+    // Redirect to login page
+    window.location.href = "/admin/login"
   }, [router])
 
   return (

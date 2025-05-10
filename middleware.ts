@@ -15,16 +15,20 @@ export function middleware(request: NextRequest) {
   }
 
   // Check for the cookie directly from the request headers
-  // This avoids using the cookies() API that requires await
   const cookieHeader = request.headers.get("cookie") || ""
+  console.log(`[Middleware] Cookie header: ${cookieHeader}`)
+
   const hasAdminCookie = cookieHeader.includes("admin_logged_in=true")
+  console.log(`[Middleware] Has admin cookie: ${hasAdminCookie}`)
 
   // If not logged in, redirect to login
   if (!hasAdminCookie) {
+    console.log(`[Middleware] No admin cookie found, redirecting to login`)
     return NextResponse.redirect(new URL("/admin/login", request.url))
   }
 
   // User is logged in, allow access
+  console.log(`[Middleware] Admin cookie found, allowing access`)
   return NextResponse.next()
 }
 

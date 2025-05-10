@@ -19,18 +19,16 @@ export async function loginAdmin(formData: FormData) {
     const correctPassword = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
 
     if (password === correctPassword) {
-      // In Next.js 14+, we need to use a different approach for cookies
-      // We'll use headers() instead of cookies() to avoid the async warning
+      console.log("Password is correct, returning success")
 
-      // Return a success response with a Set-Cookie header
+      // Return success - we'll set the cookie on the client side
       return {
         success: true,
         message: "Logged in successfully",
-        // Include instructions to set the cookie client-side
-        setCookie: true,
       }
     }
 
+    console.log("Password is incorrect")
     return { success: false, error: "Invalid password" }
   } catch (error) {
     console.error("Login error:", error)
@@ -42,9 +40,6 @@ export async function loginAdmin(formData: FormData) {
 }
 
 export async function logoutAdmin() {
-  // Return instructions to clear the cookie client-side
-  return {
-    success: true,
-    clearCookie: true,
-  }
+  console.log("Logout action called")
+  return { success: true }
 }

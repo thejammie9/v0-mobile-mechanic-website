@@ -10,15 +10,24 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string[]>([])
   const router = useRouter()
+
+  const addDebug = (message: string) => {
+    setDebugInfo((prev) => [...prev, `${new Date().toISOString().split("T")[1].split(".")[0]}: ${message}`])
+  }
 
   // Client-side cookie check
   useEffect(() => {
-    // Check if the admin_logged_in cookie exists
-    const hasAdminCookie = document.cookie.split(";").some((item) => item.trim().startsWith("admin_logged_in=true"))
+    addDebug("Checking for existing admin cookie")
+    const cookies = document.cookie.split(";").map((c) => c.trim())
+    addDebug(`All cookies: ${cookies.join(", ")}`)
 
-    // If logged in, redirect to admin dashboard
+    const hasAdminCookie = cookies.some((c) => c.startsWith("admin_logged_in=true"))
+    addDebug(`Has admin cookie: ${hasAdminCookie}`)
+
     if (hasAdminCookie) {
+      addDebug("Admin cookie found, redirecting to dashboard")
       router.push("/admin")
     }
   }, [router])
@@ -27,30 +36,34 @@ export default function AdminLoginPage() {
     e.preventDefault()
     setLoading(true)
     setError("")
+    addDebug(`Login attempt with password: ${password.replace(/./g, "*")}`)
 
     try {
       const formData = new FormData()
       formData.append("password", password)
       const result = await loginAdmin(formData)
+      addDebug(`Login result: ${JSON.stringify(result)}`)
 
       if (result.success) {
-        // Set the cookie on the client side
-        if (result.setCookie) {
-          // Set cookie with 7-day expiration
-          const expiryDate = new Date()
-          expiryDate.setDate(expiryDate.getDate() + 7)
+        addDebug("Login successful, setting cookie")
 
-          document.cookie = `admin_logged_in=true; expires=${expiryDate.toUTCString()}; path=/; ${
-            window.location.protocol === "https:" ? "secure;" : ""
-          } samesite=strict;`
-        }
+        // Set the cookie with very permissive settings to ensure it works
+        document.cookie = "admin_logged_in=true; path=/; max-age=604800" // 7 days
 
-        // Redirect to admin dashboard
+        addDebug("Cookie set, checking if it exists")
+        const cookieSet = document.cookie.split(";").some((c) => c.trim().startsWith("admin_logged_in=true"))
+        addDebug(`Cookie exists after setting: ${cookieSet}`)
+
+        // Force reload to ensure the cookie is applied
+        addDebug("Redirecting to admin dashboard")
         window.location.href = "/admin"
       } else {
+        addDebug(`Login failed: ${result.error}`)
         setError(result.error || "Login failed")
       }
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      addDebug(`Error during login: ${errorMessage}`)
       setError("An unexpected error occurred")
       console.error(err)
     } finally {
@@ -60,7 +73,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center">Admin Login</h1>
 
         {error && (
@@ -96,6 +109,16 @@ export default function AdminLoginPage() {
 
         <div className="mt-4 text-center text-sm text-gray-600">
           <p>Default password: admin123 (change in .env)</p>
+        </div>
+
+        {/* Debug information */}
+        <div className="mt-6 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-60">
+          <p className="font-bold">Debug Info:</p>
+          {debugInfo.map((msg, i) => (
+            <div key={i} className="mt-1">
+              {msg}
+            </div>
+          ))}
         </div>
       </div>
     </div>

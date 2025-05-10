@@ -34,6 +34,7 @@ export async function POST(request: Request) {
         status: "pending",
         created_at: new Date().toISOString(),
       },
+      reference: "REF-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
     })
   } catch (error) {
     console.error("Error processing booking:", error)
