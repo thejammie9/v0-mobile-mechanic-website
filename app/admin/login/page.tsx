@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
   // Client-side cookie check
   useEffect(() => {
     // Check if the admin_logged_in cookie exists
-    const hasAdminCookie = document.cookie.split(";").some((item) => item.trim().startsWith("admin_logged_in="))
+    const hasAdminCookie = document.cookie.split(";").some((item) => item.trim().startsWith("admin_logged_in=true"))
 
     // If logged in, redirect to admin dashboard
     if (hasAdminCookie) {
@@ -29,7 +29,9 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      const result = await loginAdmin(new FormData(e.target as HTMLFormElement))
+      const formData = new FormData()
+      formData.append("password", password)
+      const result = await loginAdmin(formData)
 
       if (result.success) {
         // Use window.location for a full page refresh to ensure cookies are properly set

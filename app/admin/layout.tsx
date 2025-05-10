@@ -1,24 +1,52 @@
+"use client"
+
 import type React from "react"
 import Link from "next/link"
-import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
+import { useRouter, usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import { Calendar, Settings, LogOut, Home, BarChart3, Users, FileText, Package } from "lucide-react"
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // In Next.js 14+, we need to use a different approach for cookies
-  // We'll check for the cookie in a way that doesn't trigger the warning
+  const router = useRouter()
+  const pathname = usePathname()
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Get all cookies and check manually instead of using .has()
-  const cookiesList = cookies()
-  const allCookies = cookiesList.getAll()
-  const isLoggedIn = allCookies.some((cookie) => cookie.name === "admin_logged_in")
+  useEffect(() => {
+    // Skip authentication check for login page
+    if (pathname === "/admin/login") {
+      setIsLoading(false)
+      return
+    }
 
-  if (!isLoggedIn) {
-    redirect("/admin/login")
+    // Check if the admin_logged_in cookie exists
+    const hasAdminCookie = document.cookie.split(";").some((item) => item.trim().startsWith("admin_logged_in=true"))
+
+    if (!hasAdminCookie) {
+      router.push("/admin/login")
+    } else {
+      setIsLoading(false)
+    }
+  }, [router, pathname])
+
+  // Show loading state
+  if (isLoading && pathname !== "/admin/login") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">Loading...</h2>
+          <p className="text-gray-500">Please wait</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If we're on the login page, just render children
+  if (pathname === "/admin/login") {
+    return <>{children}</>
   }
 
   return (

@@ -14,12 +14,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check if logged in - use getAll() and find instead of has()
-  const cookies = request.cookies.getAll()
-  const isLoggedIn = cookies.some((cookie) => cookie.name === "admin_logged_in")
+  // Check for the cookie directly from the request headers
+  // This avoids using the cookies() API that requires await
+  const cookieHeader = request.headers.get("cookie") || ""
+  const hasAdminCookie = cookieHeader.includes("admin_logged_in=true")
 
   // If not logged in, redirect to login
-  if (!isLoggedIn) {
+  if (!hasAdminCookie) {
     return NextResponse.redirect(new URL("/admin/login", request.url))
   }
 
