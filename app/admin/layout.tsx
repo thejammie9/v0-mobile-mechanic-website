@@ -29,11 +29,12 @@ export default function AdminLayout({
       return
     }
 
+    // More lenient check - just look for the string anywhere in the cookie
     addDebug("Checking for admin cookie")
-    const cookies = document.cookie.split(";").map((c) => c.trim())
-    addDebug(`All cookies: ${cookies.join(", ")}`)
+    const cookieStr = document.cookie
+    addDebug(`All cookies: ${cookieStr}`)
 
-    const hasAdminCookie = cookies.some((c) => c.startsWith("admin_logged_in=true"))
+    const hasAdminCookie = cookieStr.includes("admin_logged_in=true")
     addDebug(`Has admin cookie: ${hasAdminCookie}`)
 
     if (!hasAdminCookie) {

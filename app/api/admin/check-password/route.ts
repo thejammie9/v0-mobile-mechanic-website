@@ -18,6 +18,20 @@ export async function POST(request: NextRequest) {
     // Log the attempt (without revealing the actual password)
     console.log(`Admin login attempt: ${isCorrect ? "Success" : "Failed"}`)
 
+    if (isCorrect) {
+      // Set the cookie in the response
+      const response = NextResponse.json({ success: true })
+      response.cookies.set({
+        name: "admin_logged_in",
+        value: "true",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        httpOnly: true,
+        sameSite: "lax",
+      })
+      return response
+    }
+
     return NextResponse.json({ success: isCorrect })
   } catch (error) {
     console.error("Error checking admin password:", error)

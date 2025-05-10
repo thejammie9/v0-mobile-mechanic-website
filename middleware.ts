@@ -18,6 +18,7 @@ export function middleware(request: NextRequest) {
   const cookieHeader = request.headers.get("cookie") || ""
   console.log(`[Middleware] Cookie header: ${cookieHeader}`)
 
+  // More lenient check - just look for the string anywhere in the cookie header
   const hasAdminCookie = cookieHeader.includes("admin_logged_in=true")
   console.log(`[Middleware] Has admin cookie: ${hasAdminCookie}`)
 

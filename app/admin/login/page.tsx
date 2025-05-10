@@ -5,19 +5,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
-// Create a server action to check the password securely
-async function checkPassword(password: string) {
-  const response = await fetch("/api/admin/check-password", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ password }),
-  })
-
-  return response.json()
-}
-
 export default function AdminLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -26,6 +13,7 @@ export default function AdminLoginPage() {
   const router = useRouter()
 
   const addDebug = (message: string) => {
+    console.log(`[AdminLogin] ${message}`)
     setDebugInfo((prev) => [...prev, `${new Date().toISOString().split("T")[1].split(".")[0]}: ${message}`])
   }
 
@@ -33,7 +21,7 @@ export default function AdminLoginPage() {
   useEffect(() => {
     addDebug("Checking for existing admin cookie")
     const cookies = document.cookie.split(";").map((c) => c.trim())
-    addDebug(`All cookies: ${cookies.length > 0 ? "Cookies present" : "No cookies"}`)
+    addDebug(`All cookies: ${cookies.join(", ")}`)
 
     const hasAdminCookie = cookies.some((c) => c.startsWith("admin_logged_in=true"))
     addDebug(`Has admin cookie: ${hasAdminCookie}`)
@@ -48,17 +36,43 @@ export default function AdminLoginPage() {
     e.preventDefault()
     setLoading(true)
     setError("")
-    addDebug(`Login attempt with password: ${password.replace(/./g, "*")}`)
+    addDebug(`Login attempt with password length: ${password.length}`)
 
     try {
-      // Check password against environment variable using API
-      const result = await checkPassword(password)
+      // Direct password check for simplicity
+      const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD
 
-      if (result.success) {
+      if (correctPassword && password === correctPassword) {
         addDebug("Password correct, setting cookie")
 
-        // Set cookie with very simple format to avoid issues
-        document.cookie = "admin_logged_in=true; path=/; max-age=86400" // 1 day
+        // Set cookie with very simple format and longer expiration
+        document.cookie = "admin_logged_in=true; path=/; max-age=2592000; SameSite=Lax" // 30 days
+
+        addDebug("Cookie set, checking if it exists")
+        const cookieSet = document.cookie.includes("admin_logged_in=true")
+        addDebug(`Cookie exists after setting: ${cookieSet}`)
+
+        // Force reload to ensure the cookie is applied
+        window.location.href = "/admin"
+        return
+      }
+
+      // If we get here, try the server-side check as fallback
+      const response = await fetch("/api/admin/check-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        addDebug("Password correct via API, setting cookie")
+
+        // Set cookie with very simple format and longer expiration
+        document.cookie = "admin_logged_in=true; path=/; max-age=2592000; SameSite=Lax" // 30 days
 
         addDebug("Cookie set, checking if it exists")
         const cookieSet = document.cookie.includes("admin_logged_in=true")
