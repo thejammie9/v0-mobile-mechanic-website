@@ -10,7 +10,7 @@ export default function LogoutPage() {
   useEffect(() => {
     const performLogout = async () => {
       await logoutAdmin()
-      // Use window.location for a full page refresh
+      // Redirect to login page
       window.location.href = "/admin/login"
     }
 

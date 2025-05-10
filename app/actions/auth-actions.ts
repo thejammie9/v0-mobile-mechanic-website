@@ -2,9 +2,8 @@
 
 import { cookies } from "next/headers"
 
-// Default admin credentials for testing - REMOVE BEFORE PRODUCTION
+// Default admin password for testing - REMOVE BEFORE PRODUCTION
 const DEFAULT_ADMIN_PASSWORD = "admin123"
-const DEFAULT_AUTH_TOKEN = "testing_token_123456789"
 
 export async function loginAdmin(formData: FormData) {
   try {
@@ -17,39 +16,20 @@ export async function loginAdmin(formData: FormData) {
     // For debugging
     console.log("Login attempt with password:", password)
     console.log("Expected password from env:", process.env.ADMIN_PASSWORD)
-    console.log("Default password:", DEFAULT_ADMIN_PASSWORD)
 
-    // Check if using default admin password for testing
-    if (password === DEFAULT_ADMIN_PASSWORD) {
-      console.log("Using default admin password")
-      // Set a testing auth cookie
-      cookies().set("admin_auth", DEFAULT_AUTH_TOKEN, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24, // 1 day
-        path: "/",
-      })
-
-      return { success: true, message: "Logged in with default admin account" }
-    }
-
-    // Regular authentication with environment variable
-    const correctPassword = process.env.ADMIN_PASSWORD
+    // Check password against environment variable or default
+    const correctPassword = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
 
     if (password === correctPassword) {
-      console.log("Using environment variable password")
-      // Set auth cookie with the server-side token
-      const token = process.env.ADMIN_AUTH_TOKEN || DEFAULT_AUTH_TOKEN
-
-      // Set the cookie
-      cookies().set("admin_auth", token, {
+      // Set a simple flag cookie that indicates the user is logged in
+      cookies().set("admin_logged_in", "true", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 60 * 24, // 1 day
+        maxAge: 60 * 60 * 24 * 7, // 7 days
         path: "/",
       })
 
-      return { success: true, message: "Logged in with environment variable" }
+      return { success: true, message: "Logged in successfully" }
     }
 
     return { success: false, error: "Invalid password" }
@@ -64,6 +44,6 @@ export async function loginAdmin(formData: FormData) {
 
 export async function logoutAdmin() {
   // Delete the auth cookie
-  cookies().delete("admin_auth")
+  cookies().delete("admin_logged_in")
   return { success: true }
 }

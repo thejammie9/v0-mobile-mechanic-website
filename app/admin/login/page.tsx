@@ -10,7 +10,6 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<any>(null)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,7 +19,6 @@ export default function AdminLoginPage() {
 
     try {
       const result = await loginAdmin(new FormData(e.target as HTMLFormElement))
-      setDebugInfo(result) // For debugging
 
       if (result.success) {
         // Use window.location for a full page refresh to ensure cookies are properly set
@@ -72,16 +70,8 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        {/* Debug information - REMOVE IN PRODUCTION */}
-        {debugInfo && (
-          <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
-            <p className="font-bold">Debug Info:</p>
-            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-          </div>
-        )}
-
         <div className="mt-4 text-center text-sm text-gray-600">
-          <p>For testing, use the password: admin123</p>
+          <p>Default password: admin123 (change in .env)</p>
         </div>
       </div>
     </div>

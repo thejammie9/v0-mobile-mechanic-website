@@ -1,14 +1,11 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-export default function AdminAuthCheck() {
+export default async function AdminAuthCheck() {
   const cookieStore = cookies()
-  const adminAuth = cookieStore.get("admin_auth")
+  const isLoggedIn = cookieStore.has("admin_logged_in")
 
-  // Allow both the environment variable token and the testing token
-  const validToken = process.env.ADMIN_AUTH_TOKEN || "default_token"
-
-  if (!adminAuth || (adminAuth.value !== validToken && adminAuth.value !== "testing_token")) {
+  if (!isLoggedIn) {
     redirect("/admin/login")
   }
 

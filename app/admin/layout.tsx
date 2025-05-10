@@ -4,16 +4,16 @@ import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { Calendar, Settings, LogOut, Home, BarChart3, Users, FileText, Package } from "lucide-react"
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Check authentication
+  // Check authentication - note the async/await pattern
   const cookieStore = cookies()
-  const adminAuth = cookieStore.get("admin_auth")
+  const isLoggedIn = cookieStore.has("admin_logged_in")
 
-  if (!adminAuth) {
+  if (!isLoggedIn) {
     redirect("/admin/login")
   }
 
