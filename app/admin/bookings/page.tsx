@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,108 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Calendar, CheckCircle, Clock, Filter, Search, XCircle, AlertCircle, BarChart3, Car, Users } from "lucide-react"
 import { AdminWarningBanner } from "@/components/admin-warning-banner"
 
-// Mock data for bookings
-const mockBookings = [
-  {
-    id: "booking_1651234567",
-    name: "John Smith",
-    email: "john@example.com",
-    phone: "07463451967",
-    vehicle: "Ford Focus 2018",
-    issue: "Engine making strange noise when accelerating",
-    date: "2025-05-15",
-    timeSlot: "Morning (09:00 - 12:30)",
-    status: "pending",
-    createdAt: "2025-05-10T14:30:00Z",
-    notes: "",
-  },
-  {
-    id: "booking_1651234568",
-    name: "Sarah Johnson",
-    email: "sarah@example.com",
-    phone: "07712345678",
-    vehicle: "Audi A4 2020",
-    issue: "Brake pads need replacing, squeaking when braking",
-    date: "2025-05-16",
-    timeSlot: "Afternoon (13:30 - 17:30)",
-    status: "confirmed",
-    createdAt: "2025-05-11T09:15:00Z",
-    notes: "Customer requested text message before arrival",
-  },
-  {
-    id: "booking_1651234569",
-    name: "Michael Brown",
-    email: "michael@example.com",
-    phone: "07987654321",
-    vehicle: "Toyota Corolla 2017",
-    issue: "Battery keeps dying overnight",
-    date: "2025-05-14",
-    timeSlot: "Morning (09:00 - 12:30)",
-    status: "completed",
-    createdAt: "2025-05-09T16:45:00Z",
-    notes: "Replaced battery and tested charging system",
-    completedAt: "2025-05-14T11:30:00Z",
-    servicePerformed: "Battery replacement and electrical system check",
-    cost: "£120",
-  },
-  {
-    id: "booking_1651234570",
-    name: "Emma Wilson",
-    email: "emma@example.com",
-    phone: "07123456789",
-    vehicle: "Volkswagen Golf 2019",
-    issue: "Oil change and general service",
-    date: "2025-05-13",
-    timeSlot: "Afternoon (13:30 - 17:30)",
-    status: "completed",
-    createdAt: "2025-05-08T10:20:00Z",
-    notes: "Completed full service, replaced oil filter and air filter",
-    completedAt: "2025-05-13T15:45:00Z",
-    servicePerformed: "Full service with oil change",
-    cost: "£95",
-  },
-  {
-    id: "booking_1651234571",
-    name: "David Taylor",
-    email: "david@example.com",
-    phone: "07654321987",
-    vehicle: "BMW 3 Series 2021",
-    issue: "Check engine light is on",
-    date: "2025-05-17",
-    timeSlot: "Weekend (10:30 - 13:30)",
-    status: "cancelled",
-    createdAt: "2025-05-12T13:10:00Z",
-    notes: "Customer cancelled - found another mechanic",
-  },
-  {
-    id: "booking_1651234572",
-    name: "Lisa Anderson",
-    email: "lisa@example.com",
-    phone: "07891234567",
-    vehicle: "Nissan Qashqai 2018",
-    issue: "Suspension feels bouncy, possible shock absorber issue",
-    date: "2025-05-18",
-    timeSlot: "Morning (09:00 - 12:30)",
-    status: "confirmed",
-    createdAt: "2025-05-13T08:30:00Z",
-    notes: "",
-  },
-]
-
-// Dashboard statistics
-const dashboardStats = {
-  totalBookings: 24,
-  pendingBookings: 8,
-  confirmedBookings: 6,
-  completedBookings: 9,
-  cancelledBookings: 1,
-  revenueThisMonth: "£2,450",
-  averageJobValue: "£105",
-  mostCommonService: "Oil Change",
-}
-
 export default function AdminBookingsPage() {
-  const [bookings, setBookings] = useState(mockBookings)
+  const [bookings, setBookings] = useState([])
   const [activeTab, setActiveTab] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
@@ -119,11 +19,88 @@ export default function AdminBookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [completionDetails, setCompletionDetails] = useState({
     servicePerformed: "",
     cost: "",
     notes: "",
   })
+
+  // Dashboard statistics
+  const [dashboardStats, setDashboardStats] = useState({
+    totalBookings: 0,
+    pendingBookings: 0,
+    confirmedBookings: 0,
+    completedBookings: 0,
+    cancelledBookings: 0,
+    revenueThisMonth: "£0",
+    averageJobValue: "£0",
+    mostCommonService: "None",
+  })
+
+  // Fetch bookings from API
+  useEffect(() => {
+    fetchBookings()
+  }, [])
+
+  const fetchBookings = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch("/api/bookings")
+      const data = await response.json()
+
+      if (data.success) {
+        console.log("Fetched bookings:", data.bookings)
+        setBookings(data.bookings)
+
+        // Calculate dashboard statistics
+        const stats = {
+          totalBookings: data.bookings.length,
+          pendingBookings: data.bookings.filter((b) => b.status === "pending").length,
+          confirmedBookings: data.bookings.filter((b) => b.status === "confirmed").length,
+          completedBookings: data.bookings.filter((b) => b.status === "completed").length,
+          cancelledBookings: data.bookings.filter((b) => b.status === "cancelled").length,
+          revenueThisMonth: "£0",
+          averageJobValue: "£0",
+          mostCommonService: "None",
+        }
+
+        // Calculate revenue if there are completed bookings with cost
+        const completedWithCost = data.bookings.filter((b) => b.status === "completed" && b.cost)
+        if (completedWithCost.length > 0) {
+          const totalRevenue = completedWithCost.reduce((sum, booking) => {
+            const cost = Number.parseFloat(booking.cost.replace(/[^0-9.]/g, "")) || 0
+            return sum + cost
+          }, 0)
+
+          stats.revenueThisMonth = `£${totalRevenue.toFixed(2)}`
+          stats.averageJobValue = `£${(totalRevenue / completedWithCost.length).toFixed(2)}`
+        }
+
+        // Find most common service
+        const serviceTypes = data.bookings.filter((b) => b.serviceType).map((b) => b.serviceType)
+
+        if (serviceTypes.length > 0) {
+          const serviceCounts = serviceTypes.reduce((acc, service) => {
+            acc[service] = (acc[service] || 0) + 1
+            return acc
+          }, {})
+
+          stats.mostCommonService = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0][0]
+        }
+
+        setDashboardStats(stats)
+      } else {
+        console.error("Failed to fetch bookings:", data.message)
+        setBookings([])
+      }
+    } catch (error) {
+      console.error("Error fetching bookings:", error)
+      setBookings([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Filter bookings based on active tab, search term, and filters
   const filteredBookings = bookings.filter((booking) => {
@@ -156,34 +133,92 @@ export default function AdminBookingsPage() {
   })
 
   // Handle status change
-  const handleStatusChange = (bookingId, newStatus) => {
-    setBookings(bookings.map((booking) => (booking.id === bookingId ? { ...booking, status: newStatus } : booking)))
+  const handleStatusChange = async (bookingId, newStatus) => {
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Update local state
+        setBookings(bookings.map((booking) => (booking.id === bookingId ? { ...booking, status: newStatus } : booking)))
+
+        // Refresh dashboard stats
+        fetchBookings()
+      } else {
+        console.error("Failed to update booking status:", data.message)
+        alert("Failed to update booking status. Please try again.")
+      }
+    } catch (error) {
+      console.error("Error updating booking status:", error)
+      alert("An error occurred while updating the booking status.")
+    }
   }
 
   // Handle marking a booking as complete
   const handleCompleteBooking = (booking) => {
     setSelectedBooking(booking)
+    setCompletionDetails({
+      servicePerformed: booking.serviceType || "",
+      cost: "",
+      notes: booking.notes || "",
+    })
     setIsCompleteModalOpen(true)
   }
 
   // Submit completion details
-  const submitCompletionDetails = () => {
+  const submitCompletionDetails = async () => {
     if (selectedBooking) {
-      const updatedBookings = bookings.map((booking) =>
-        booking.id === selectedBooking.id
-          ? {
-              ...booking,
-              status: "completed",
-              completedAt: new Date().toISOString(),
-              servicePerformed: completionDetails.servicePerformed,
-              cost: completionDetails.cost,
-              notes: completionDetails.notes || booking.notes,
-            }
-          : booking,
-      )
-      setBookings(updatedBookings)
-      setIsCompleteModalOpen(false)
-      setCompletionDetails({ servicePerformed: "", cost: "", notes: "" })
+      try {
+        const response = await fetch(`/api/bookings/${selectedBooking.id}/complete`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            servicePerformed: completionDetails.servicePerformed,
+            cost: completionDetails.cost,
+            notes: completionDetails.notes,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (data.success) {
+          // Update local state
+          const updatedBookings = bookings.map((booking) =>
+            booking.id === selectedBooking.id
+              ? {
+                  ...booking,
+                  status: "completed",
+                  completedAt: new Date().toISOString(),
+                  servicePerformed: completionDetails.servicePerformed,
+                  cost: completionDetails.cost,
+                  notes: completionDetails.notes,
+                }
+              : booking,
+          )
+
+          setBookings(updatedBookings)
+          setIsCompleteModalOpen(false)
+          setCompletionDetails({ servicePerformed: "", cost: "", notes: "" })
+
+          // Refresh dashboard stats
+          fetchBookings()
+        } else {
+          console.error("Failed to complete booking:", data.message)
+          alert("Failed to complete booking. Please try again.")
+        }
+      } catch (error) {
+        console.error("Error completing booking:", error)
+        alert("An error occurred while completing the booking.")
+      }
     }
   }
 
@@ -338,7 +373,10 @@ export default function AdminBookingsPage() {
                     <p className="text-sm text-gray-500">Cancellation Rate</p>
                   </div>
                   <p className="font-semibold">
-                    {Math.round((dashboardStats.cancelledBookings / dashboardStats.totalBookings) * 100)}%
+                    {dashboardStats.totalBookings > 0
+                      ? Math.round((dashboardStats.cancelledBookings / dashboardStats.totalBookings) * 100)
+                      : 0}
+                    %
                   </p>
                 </div>
               </CardContent>
@@ -414,56 +452,86 @@ export default function AdminBookingsPage() {
             </TabsList>
 
             <TabsContent value="all" className="mt-4">
-              <BookingsList
-                bookings={filteredBookings}
-                onStatusChange={handleStatusChange}
-                onViewDetails={viewBookingDetails}
-                onCompleteBooking={handleCompleteBooking}
-                getStatusBadge={getStatusBadge}
-                formatDate={formatDate}
-              />
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : (
+                <BookingsList
+                  bookings={filteredBookings}
+                  onStatusChange={handleStatusChange}
+                  onViewDetails={viewBookingDetails}
+                  onCompleteBooking={handleCompleteBooking}
+                  getStatusBadge={getStatusBadge}
+                  formatDate={formatDate}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="pending" className="mt-4">
-              <BookingsList
-                bookings={filteredBookings}
-                onStatusChange={handleStatusChange}
-                onViewDetails={viewBookingDetails}
-                onCompleteBooking={handleCompleteBooking}
-                getStatusBadge={getStatusBadge}
-                formatDate={formatDate}
-              />
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : (
+                <BookingsList
+                  bookings={filteredBookings}
+                  onStatusChange={handleStatusChange}
+                  onViewDetails={viewBookingDetails}
+                  onCompleteBooking={handleCompleteBooking}
+                  getStatusBadge={getStatusBadge}
+                  formatDate={formatDate}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="confirmed" className="mt-4">
-              <BookingsList
-                bookings={filteredBookings}
-                onStatusChange={handleStatusChange}
-                onViewDetails={viewBookingDetails}
-                onCompleteBooking={handleCompleteBooking}
-                getStatusBadge={getStatusBadge}
-                formatDate={formatDate}
-              />
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : (
+                <BookingsList
+                  bookings={filteredBookings}
+                  onStatusChange={handleStatusChange}
+                  onViewDetails={viewBookingDetails}
+                  onCompleteBooking={handleCompleteBooking}
+                  getStatusBadge={getStatusBadge}
+                  formatDate={formatDate}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="completed" className="mt-4">
-              <CompletedBookingsList
-                bookings={filteredBookings}
-                onViewDetails={viewBookingDetails}
-                getStatusBadge={getStatusBadge}
-                formatDate={formatDate}
-              />
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : (
+                <CompletedBookingsList
+                  bookings={filteredBookings}
+                  onViewDetails={viewBookingDetails}
+                  getStatusBadge={getStatusBadge}
+                  formatDate={formatDate}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="cancelled" className="mt-4">
-              <BookingsList
-                bookings={filteredBookings}
-                onStatusChange={handleStatusChange}
-                onViewDetails={viewBookingDetails}
-                onCompleteBooking={handleCompleteBooking}
-                getStatusBadge={getStatusBadge}
-                formatDate={formatDate}
-              />
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : (
+                <BookingsList
+                  bookings={filteredBookings}
+                  onStatusChange={handleStatusChange}
+                  onViewDetails={viewBookingDetails}
+                  onCompleteBooking={handleCompleteBooking}
+                  getStatusBadge={getStatusBadge}
+                  formatDate={formatDate}
+                />
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -493,6 +561,12 @@ export default function AdminBookingsPage() {
                   <p>
                     <span className="font-medium">Phone:</span> {selectedBooking.phone}
                   </p>
+                  {selectedBooking.address && (
+                    <p>
+                      <span className="font-medium">Address:</span> {selectedBooking.address}
+                      {selectedBooking.postcode && `, ${selectedBooking.postcode}`}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -521,9 +595,19 @@ export default function AdminBookingsPage() {
                 <p className="mt-2">
                   <span className="font-medium">Vehicle:</span> {selectedBooking.vehicle}
                 </p>
+                {selectedBooking.vehicle_reg && (
+                  <p>
+                    <span className="font-medium">Registration:</span> {selectedBooking.vehicle_reg}
+                  </p>
+                )}
                 <p>
                   <span className="font-medium">Issue:</span> {selectedBooking.issue}
                 </p>
+                {selectedBooking.serviceType && (
+                  <p>
+                    <span className="font-medium">Service Type:</span> {selectedBooking.serviceType}
+                  </p>
+                )}
               </div>
 
               {selectedBooking.status === "completed" && (
@@ -793,7 +877,9 @@ function CompletedBookingsList({ bookings, onViewDetails, getStatusBadge, format
                 <div className="text-xs text-gray-500">{booking.timeSlot}</div>
               </td>
               <td className="px-6 py-4">
-                <div className="text-sm text-gray-900">{booking.servicePerformed || "Not specified"}</div>
+                <div className="text-sm text-gray-900">
+                  {booking.servicePerformed || booking.serviceType || "Not specified"}
+                </div>
                 <div className="text-xs text-gray-500 line-clamp-1">{booking.notes || "No notes"}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
