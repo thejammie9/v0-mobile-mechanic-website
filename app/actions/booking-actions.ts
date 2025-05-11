@@ -27,16 +27,28 @@ export type BookingData = z.infer<typeof bookingSchema> & {
   cancellationToken?: string
 }
 
-// Create email transporter
+// Create email transporter with better error handling
 const createTransporter = () => {
+  const host = process.env.SMTP_HOST || "mail.yourdomain.com"
+  const port = Number.parseInt(process.env.SMTP_PORT || "587")
+  const secure = process.env.SMTP_SECURE === "true" // true for 465, false for other ports
+  const user = process.env.SMTP_USER || "info@yourdomain.com"
+  const pass = process.env.SMTP_PASSWORD || "your-email-password"
+
+  console.log(`Creating SMTP transporter with: host=${host}, port=${port}, secure=${secure}, user=${user}`)
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "mail.yourdomain.com",
-    port: Number.parseInt(process.env.SMTP_PORT || "587"),
-    secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
+    host,
+    port,
+    secure,
     auth: {
-      user: process.env.SMTP_USER || "info@yourdomain.com",
-      pass: process.env.SMTP_PASSWORD || "your-email-password",
+      user,
+      pass,
     },
+    // Add debug option for troubleshooting
+    debug: true,
+    // Add logger for troubleshooting
+    logger: true,
   })
 }
 
@@ -48,6 +60,9 @@ const generateCancellationToken = () => {
 // Function to save booking to database
 const saveBooking = async (booking: BookingData) => {
   try {
+    // Format the created_at date for MySQL
+    const formattedCreatedAt = new Date(booking.createdAt).toISOString().slice(0, 19).replace("T", " ")
+
     await query(
       `INSERT INTO bookings 
       (id, name, email, phone, vehicle, issue, booking_date, time_slot, status, created_at, cancellation_token) 
@@ -62,7 +77,7 @@ const saveBooking = async (booking: BookingData) => {
         booking.date,
         booking.timeSlot,
         booking.status,
-        booking.createdAt,
+        formattedCreatedAt,
         booking.cancellationToken,
       ],
     )
@@ -73,14 +88,17 @@ const saveBooking = async (booking: BookingData) => {
   }
 }
 
-// Function to send admin notification email
+// Function to send admin notification email with better error handling
 const sendAdminNotification = async (booking: BookingData) => {
   try {
     const transporter = createTransporter()
+    const adminEmail = process.env.ADMIN_EMAIL || "contact@jamiesautocare.com"
+
+    console.log(`Sending admin notification to: ${adminEmail}`)
 
     await transporter.sendMail({
       from: `"Jamie's Auto Care" <${process.env.SMTP_USER || "contact@jamiesautocare.com"}>`,
-      to: process.env.ADMIN_EMAIL || "contact@jamiesautocare.com", // Set your email in .env
+      to: adminEmail,
       subject: `New Booking Request: ${booking.name}`,
       html: `
         <h1>New Booking Request</h1>
@@ -94,18 +112,23 @@ const sendAdminNotification = async (booking: BookingData) => {
         <p><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin/bookings">View in Admin Dashboard</a></p>
       `,
     })
+
+    console.log("Admin notification sent successfully")
   } catch (error) {
     console.error("Error sending admin notification:", error)
+    // Don't throw the error, just log it
   }
 }
 
-// Function to send customer confirmation email
+// Function to send customer confirmation email with better error handling
 const sendCustomerConfirmation = async (booking: BookingData) => {
   try {
     const transporter = createTransporter()
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     // Use PHP cancellation page instead of dynamic route
     const cancellationUrl = `${appUrl}/bookings/cancel.php?id=${booking.id}&token=${booking.cancellationToken}`
+
+    console.log(`Sending customer confirmation to: ${booking.email}`)
 
     await transporter.sendMail({
       from: `"Jamie's Auto Care" <${process.env.SMTP_USER || "contact@jamiesautocare.com"}>`,
@@ -127,8 +150,11 @@ const sendCustomerConfirmation = async (booking: BookingData) => {
         <p>Best regards,<br>Jamie's Auto Care Team</p>
       `,
     })
+
+    console.log("Customer confirmation sent successfully")
   } catch (error) {
     console.error("Error sending customer confirmation:", error)
+    // Don't throw the error, just log it
   }
 }
 
@@ -175,6 +201,7 @@ const sendCancellationConfirmation = async (booking: BookingData) => {
     })
   } catch (error) {
     console.error("Error sending cancellation confirmation:", error)
+    // Don't throw the error, just log it
   }
 }
 

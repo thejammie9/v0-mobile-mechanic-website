@@ -2,130 +2,22 @@
 
 import { Calendar } from "@/components/ui/calendar"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Plus, User, Phone, Mail, Car, FileText, XCircle } from "lucide-react"
 import { AdminWarningBanner } from "@/components/admin-warning-banner"
 
-// Mock customer data
-const mockCustomers = [
-  {
-    id: "cust_1001",
-    name: "John Smith",
-    email: "john@example.com",
-    phone: "07463451967",
-    address: "123 Main St, Edinburgh, EH1 1AA",
-    vehicles: [
-      { make: "Ford", model: "Focus", year: "2018", registration: "AB18 XYZ" },
-      { make: "Vauxhall", model: "Corsa", year: "2015", registration: "CD15 ABC" },
-    ],
-    bookingHistory: [
-      {
-        id: "booking_1651234567",
-        date: "2025-05-15",
-        service: "Engine repair",
-        status: "completed",
-        cost: "£120",
-      },
-      {
-        id: "booking_1651234570",
-        date: "2025-04-10",
-        service: "Oil change",
-        status: "completed",
-        cost: "£45",
-      },
-    ],
-    notes: "Prefers morning appointments. Always pays on time.",
-    createdAt: "2024-01-15T10:30:00Z",
-  },
-  {
-    id: "cust_1002",
-    name: "Sarah Johnson",
-    email: "sarah@example.com",
-    phone: "07712345678",
-    address: "456 High Street, Edinburgh, EH2 2BB",
-    vehicles: [{ make: "Audi", model: "A4", year: "2020", registration: "EF20 DEF" }],
-    bookingHistory: [
-      {
-        id: "booking_1651234568",
-        date: "2025-05-16",
-        service: "Brake pad replacement",
-        status: "confirmed",
-        cost: "",
-      },
-    ],
-    notes: "New customer. Referred by John Smith.",
-    createdAt: "2024-03-20T14:15:00Z",
-  },
-  {
-    id: "cust_1003",
-    name: "Michael Brown",
-    email: "michael@example.com",
-    phone: "07987654321",
-    address: "789 Low Road, Edinburgh, EH3 3CC",
-    vehicles: [{ make: "Toyota", model: "Corolla", year: "2017", registration: "GH17 GHI" }],
-    bookingHistory: [
-      {
-        id: "booking_1651234569",
-        date: "2025-05-14",
-        service: "Battery replacement",
-        status: "completed",
-        cost: "£85",
-      },
-    ],
-    notes: "",
-    createdAt: "2024-02-05T09:45:00Z",
-  },
-  {
-    id: "cust_1004",
-    name: "Emma Wilson",
-    email: "emma@example.com",
-    phone: "07123456789",
-    address: "101 New Avenue, Edinburgh, EH4 4DD",
-    vehicles: [{ make: "Volkswagen", model: "Golf", year: "2019", registration: "JK19 JKL" }],
-    bookingHistory: [
-      {
-        id: "booking_1651234571",
-        date: "2025-05-13",
-        service: "Full service",
-        status: "completed",
-        cost: "£95",
-      },
-    ],
-    notes: "Prefers afternoon appointments.",
-    createdAt: "2024-01-30T11:20:00Z",
-  },
-  {
-    id: "cust_1005",
-    name: "David Taylor",
-    email: "david@example.com",
-    phone: "07654321987",
-    address: "202 Old Lane, Edinburgh, EH5 5EE",
-    vehicles: [{ make: "BMW", model: "3 Series", year: "2021", registration: "LM21 MNO" }],
-    bookingHistory: [
-      {
-        id: "booking_1651234572",
-        date: "2025-05-17",
-        service: "Engine diagnostic",
-        status: "cancelled",
-        cost: "",
-      },
-    ],
-    notes: "Has complained about pricing in the past.",
-    createdAt: "2024-04-10T16:30:00Z",
-  },
-]
-
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState(mockCustomers)
+  const [customers, setCustomers] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [customerForm, setCustomerForm] = useState({
     name: "",
     email: "",
@@ -139,6 +31,96 @@ export default function CustomersPage() {
     year: "",
     registration: "",
   })
+
+  // Fetch customers from the database
+  useEffect(() => {
+    fetchCustomers()
+  }, [])
+
+  const fetchCustomers = async () => {
+    setIsLoading(true)
+    try {
+      // Fetch customers from bookings table (as a temporary solution)
+      const response = await fetch("/api/bookings")
+      const data = await response.json()
+
+      if (data.success) {
+        // Group bookings by email to create customer records
+        const customerMap = new Map()
+
+        data.bookings.forEach((booking) => {
+          if (!customerMap.has(booking.email)) {
+            customerMap.set(booking.email, {
+              id: `cust_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+              name: booking.name,
+              email: booking.email,
+              phone: booking.phone,
+              address: booking.address || "",
+              vehicles: [
+                {
+                  make: booking.vehicle.split(" ")[0] || "",
+                  model: booking.vehicle.split(" ")[1] || "",
+                  year: booking.vehicle.includes("-") ? booking.vehicle.split("-")[0].trim().split(" ").pop() : "",
+                  registration: booking.vehicle_reg || "",
+                },
+              ],
+              bookingHistory: [
+                {
+                  id: booking.id,
+                  date: booking.date,
+                  service: booking.service_type || booking.issue.substring(0, 30),
+                  status: booking.status,
+                  cost: "",
+                },
+              ],
+              notes: "",
+              createdAt: booking.createdAt,
+            })
+          } else {
+            // Add booking to existing customer
+            const customer = customerMap.get(booking.email)
+
+            // Add booking to history if not already there
+            if (!customer.bookingHistory.some((b) => b.id === booking.id)) {
+              customer.bookingHistory.push({
+                id: booking.id,
+                date: booking.date,
+                service: booking.service_type || booking.issue.substring(0, 30),
+                status: booking.status,
+                cost: "",
+              })
+            }
+
+            // Add vehicle if not already there
+            const vehicleExists = customer.vehicles.some(
+              (v) =>
+                v.registration === booking.vehicle_reg ||
+                v.make + " " + v.model === booking.vehicle.split("-")[0].trim(),
+            )
+
+            if (!vehicleExists && booking.vehicle) {
+              customer.vehicles.push({
+                make: booking.vehicle.split(" ")[0] || "",
+                model: booking.vehicle.split(" ")[1] || "",
+                year: booking.vehicle.includes("-") ? booking.vehicle.split("-")[0].trim().split(" ").pop() : "",
+                registration: booking.vehicle_reg || "",
+              })
+            }
+          }
+        })
+
+        setCustomers(Array.from(customerMap.values()))
+      } else {
+        console.error("Failed to fetch customers:", data.message)
+        setCustomers([])
+      }
+    } catch (error) {
+      console.error("Error fetching customers:", error)
+      setCustomers([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Filter customers based on search term
   const filteredCustomers = customers.filter(
@@ -189,37 +171,68 @@ export default function CustomersPage() {
   }
 
   // Submit add customer form
-  const submitAddCustomerForm = () => {
-    const newCustomer = {
-      id: `cust_${Math.floor(1000 + Math.random() * 9000)}`,
-      ...customerForm,
-      vehicles: [],
-      bookingHistory: [],
-      createdAt: new Date().toISOString(),
+  const submitAddCustomerForm = async () => {
+    try {
+      const newCustomer = {
+        id: `cust_${Date.now()}`,
+        ...customerForm,
+        vehicles: [],
+        bookingHistory: [],
+        createdAt: new Date().toISOString(),
+      }
+
+      // In a real implementation, you would save to the database here
+      // For now, just add to the local state
+      setCustomers([...customers, newCustomer])
+      setIsAddModalOpen(false)
+
+      // Show success message
+      alert("Customer added successfully!")
+    } catch (error) {
+      console.error("Error adding customer:", error)
+      alert("Failed to add customer. Please try again.")
     }
-    setCustomers([...customers, newCustomer])
-    setIsAddModalOpen(false)
   }
 
   // Submit edit customer form
-  const submitEditCustomerForm = () => {
-    const updatedCustomers = customers.map((customer) =>
-      customer.id === selectedCustomer.id
-        ? {
-            ...customer,
-            ...customerForm,
-          }
-        : customer,
-    )
-    setCustomers(updatedCustomers)
-    setIsEditModalOpen(false)
+  const submitEditCustomerForm = async () => {
+    try {
+      // In a real implementation, you would update the database here
+      // For now, just update the local state
+      const updatedCustomers = customers.map((customer) =>
+        customer.id === selectedCustomer.id
+          ? {
+              ...customer,
+              ...customerForm,
+            }
+          : customer,
+      )
+      setCustomers(updatedCustomers)
+      setIsEditModalOpen(false)
+
+      // Show success message
+      alert("Customer updated successfully!")
+    } catch (error) {
+      console.error("Error updating customer:", error)
+      alert("Failed to update customer. Please try again.")
+    }
   }
 
   // Confirm delete customer
-  const confirmDeleteCustomer = () => {
-    const updatedCustomers = customers.filter((customer) => customer.id !== selectedCustomer.id)
-    setCustomers(updatedCustomers)
-    setIsDeleteModalOpen(false)
+  const confirmDeleteCustomer = async () => {
+    try {
+      // In a real implementation, you would delete from the database here
+      // For now, just remove from the local state
+      const updatedCustomers = customers.filter((customer) => customer.id !== selectedCustomer.id)
+      setCustomers(updatedCustomers)
+      setIsDeleteModalOpen(false)
+
+      // Show success message
+      alert("Customer deleted successfully!")
+    } catch (error) {
+      console.error("Error deleting customer:", error)
+      alert("Failed to delete customer. Please try again.")
+    }
   }
 
   // Add vehicle to customer
@@ -325,7 +338,15 @@ export default function CustomersPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredCustomers.length === 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-4 text-center">
+                      <div className="flex justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredCustomers.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
                       No customers found
@@ -361,7 +382,7 @@ export default function CustomersPage() {
                             ? customer.vehicles.map((vehicle, index) => (
                                 <div key={index} className="flex items-center mb-1 last:mb-0">
                                   <Car className="h-4 w-4 mr-1 text-gray-400" />
-                                  {vehicle.make} {vehicle.model} ({vehicle.year})
+                                  {vehicle.make} {vehicle.model} {vehicle.year ? `(${vehicle.year})` : ""}
                                 </div>
                               ))
                             : "No vehicles"}
@@ -455,7 +476,7 @@ export default function CustomersPage() {
                             <FileText className="h-4 w-4 mr-2" />
                             Address
                           </div>
-                          <div className="font-medium">{selectedCustomer.address}</div>
+                          <div className="font-medium">{selectedCustomer.address || "No address provided"}</div>
                         </div>
                         <div>
                           <div className="flex items-center text-gray-500 text-sm">
@@ -491,9 +512,11 @@ export default function CustomersPage() {
                             <div key={index} className="border rounded-md p-3">
                               <div className="font-medium flex items-center">
                                 <Car className="h-4 w-4 mr-2 text-gray-500" />
-                                {vehicle.make} {vehicle.model} ({vehicle.year})
+                                {vehicle.make} {vehicle.model} {vehicle.year ? `(${vehicle.year})` : ""}
                               </div>
-                              <div className="text-sm text-gray-500 mt-1">Registration: {vehicle.registration}</div>
+                              <div className="text-sm text-gray-500 mt-1">
+                                Registration: {vehicle.registration || "Not provided"}
+                              </div>
                             </div>
                           ))}
                         </div>

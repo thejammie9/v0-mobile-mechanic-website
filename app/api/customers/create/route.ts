@@ -1,80 +1,77 @@
-import { NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { query } from "@/lib/db"
+import { z } from "zod"
 
-export async function POST(request: Request) {
+// Define customer schema for validation
+const customerSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  phone: z.string().min(5, { message: "Please enter a valid phone number" }),
+  address: z.string().optional(),
+  postcode: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+export async function POST(request: NextRequest) {
   try {
-    const customerData = await request.json()
-    console.log("Customer data received:", customerData)
+    const body = await request.json()
 
-    // Validate required fields
-    const requiredFields = ["name", "email", "phone"]
-    const missingFields = requiredFields.filter((field) => !customerData[field])
+    // Validate the request body
+    const validatedData = customerSchema.parse(body)
 
-    if (missingFields.length > 0) {
+    // Check if customer already exists
+    const existingCustomers = await query("SELECT * FROM customers WHERE email = ?", [validatedData.email])
+
+    if (existingCustomers.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          message: `Missing required fields: ${missingFields.join(", ")}`,
-          errors: missingFields.map((field) => ({ field, message: `${field} is required` })),
+          message: "A customer with this email already exists",
+          customerId: existingCustomers[0].id,
         },
         { status: 400 },
       )
     }
 
-    // Generate customer ID
-    const customerId = `customer_${Date.now()}`
+    // Generate a customer ID
+    const customerId = `cust_${Date.now()}`
 
-    // Format the current date in MySQL format (YYYY-MM-DD HH:MM:SS)
-    const now = new Date()
-    const mysqlDatetime = now.toISOString().slice(0, 19).replace("T", " ")
-
-    // Save to database
-    try {
-      await query(
-        `INSERT INTO customers 
-        (id, name, email, phone, address, notes, created_at, updated_at) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          customerId,
-          customerData.name,
-          customerData.email,
-          customerData.phone,
-          customerData.address || "",
-          customerData.notes || "",
-          mysqlDatetime,
-          mysqlDatetime,
-        ],
-      )
-      console.log("Customer saved to database")
-    } catch (dbError) {
-      console.error("Database error:", dbError)
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Failed to save customer to database",
-        },
-        { status: 500 },
-      )
-    }
+    // Insert the customer
+    await query(
+      `INSERT INTO customers 
+       (id, name, email, phone, address, postcode, notes, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        customerId,
+        validatedData.name,
+        validatedData.email,
+        validatedData.phone,
+        validatedData.address || "",
+        validatedData.postcode || "",
+        validatedData.notes || "",
+        new Date().toISOString().slice(0, 19).replace("T", " "),
+      ],
+    )
 
     return NextResponse.json({
       success: true,
       message: "Customer created successfully",
-      customer: {
-        id: customerId,
-        ...customerData,
-        created_at: mysqlDatetime,
-        updated_at: mysqlDatetime,
-      },
+      customerId,
     })
   } catch (error) {
-    console.error("Error processing customer:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: "An error occurred while processing your request",
-      },
-      { status: 500 },
-    )
+    console.error("Error creating customer:", error)
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Validation error",
+          errors: error.errors,
+        },
+        { status: 400 },
+      )
+    }
+
+    return NextResponse.json({ success: false, message: "Failed to create customer" }, { status: 500 })
   }
 }
