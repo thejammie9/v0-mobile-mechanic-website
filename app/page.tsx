@@ -1,7 +1,6 @@
 import Hero from "@/components/hero"
 import Services from "@/components/services"
-import Gallery from "@/components/gallery"
-import TrustpilotWidget from "@/components/trustpilot"
+import Portfolio from "@/components/portfolio"
 import BookingForm from "@/components/booking-form"
 import Contact from "@/components/contact"
 import Footer from "@/components/footer"
@@ -11,8 +10,7 @@ export default function Home() {
     <main className="min-h-screen">
       <Hero />
       <Services />
-      <Gallery />
-      <TrustpilotWidget />
+      <Portfolio />
       <BookingForm />
       <Contact />
       <Footer />

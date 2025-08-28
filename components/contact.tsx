@@ -16,7 +16,7 @@ export default function Contact() {
                   <Phone className="h-5 w-5 text-orange-600 mt-1 mr-3" />
                   <div>
                     <p className="font-medium">Phone</p>
-                    <p className="text-gray-600">07463451967</p>
+                    <p className="text-gray-600">07123 456789</p>
                   </div>
                 </div>
 
@@ -24,7 +24,7 @@ export default function Contact() {
                   <Mail className="h-5 w-5 text-orange-600 mt-1 mr-3" />
                   <div>
                     <p className="font-medium">Email</p>
-                    <p className="text-gray-600">contact@jamiesautocare.com</p>
+                    <p className="text-gray-600">info@edinburghmobilemechanic.com</p>
                   </div>
                 </div>
 
@@ -32,9 +32,7 @@ export default function Contact() {
                   <MapPin className="h-5 w-5 text-orange-600 mt-1 mr-3" />
                   <div>
                     <p className="font-medium">Service Area</p>
-                    <p className="text-gray-600">
-                      Edinburgh, Dalkeith, Musselburgh, Gorebridge, Bonnyrigg and surrounding areas (within 20 miles)
-                    </p>
+                    <p className="text-gray-600">Edinburgh and surrounding areas (within 20 miles)</p>
                   </div>
                 </div>
               </div>
@@ -46,15 +44,15 @@ export default function Contact() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="font-medium">Monday - Friday</span>
-                  <span>09:00 - 17:30</span>
+                  <span>8:00 AM - 7:00 PM</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Saturday</span>
-                  <span>10:00 - 13:30</span>
+                  <span>9:00 AM - 5:00 PM</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Sunday</span>
-                  <span>10:00 - 13:30</span>
+                  <span>Emergency calls only</span>
                 </div>
               </div>
             </div>
@@ -62,14 +60,14 @@ export default function Contact() {
 
           <div className="h-[400px] rounded-lg overflow-hidden shadow-sm border border-gray-200">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d143012.2825570553!2d-3.3396953741954985!3d55.94102428380436!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4887b800a5982623%3A0x64f2147b7ce71727!2sEdinburgh!5e0!3m2!1sen!2suk!4v1713874612099!5m2!1sen!2suk"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d143012.2825570553!2d-3.3396953741954985!3d55.94102428380436!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4887b800a5982623%3A0x64f2147b7ce71727!2sEdinburgh!5e0!3m2!1sen!2suk!4v1650000000000!5m2!1sen!2suk"
               width="100%"
               height="100%"
               style={{ border: 0 }}
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Edinburgh and surrounding areas service map"
+              title="Edinburgh service area map"
             ></iframe>
           </div>
         </div>
