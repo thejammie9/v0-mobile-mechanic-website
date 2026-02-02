@@ -15,7 +15,7 @@ This guide covers deploying the website on a VPS (Ubuntu/Debian).
 
 ## Step 1: Install Node.js
 
-```bash
+\`\`\`bash
 # Update system packages
 sudo apt update && sudo apt upgrade -y
 
@@ -26,57 +26,57 @@ sudo apt install -y nodejs
 # Verify installation
 node -v
 npm -v
-```
+\`\`\`
 
 ---
 
 ## Step 2: Clone or Upload the Project
 
 **Option A: Clone from GitHub**
-```bash
+\`\`\`bash
 cd /var/www
 git clone https://github.com/YOUR_USERNAME/v0-mobile-mechanic-website.git
 cd v0-mobile-mechanic-website
-```
+\`\`\`
 
 **Option B: Upload via SCP**
-```bash
+\`\`\`bash
 # From your local machine
 scp -r ./v0-mobile-mechanic-website user@your-server-ip:/var/www/
-```
+\`\`\`
 
 ---
 
 ## Step 3: Install Dependencies
 
-```bash
+\`\`\`bash
 cd /var/www/v0-mobile-mechanic-website
 npm install
-```
+\`\`\`
 
 ---
 
 ## Step 4: Build for Production
 
-```bash
+\`\`\`bash
 npm run build
-```
+\`\`\`
 
 ---
 
 ## Step 5: Run the Application
 
 ### Quick Start (Testing)
-```bash
+\`\`\`bash
 npm run start
-```
+\`\`\`
 The site will be available at `http://your-server-ip:3000`
 
 ### Production with PM2 (Recommended)
 
 PM2 keeps your app running and restarts it if it crashes.
 
-```bash
+\`\`\`bash
 # Install PM2 globally
 sudo npm install -g pm2
 
@@ -89,15 +89,15 @@ pm2 save
 # Set PM2 to start on system boot
 pm2 startup
 # Follow the instructions it outputs
-```
+\`\`\`
 
 **Useful PM2 Commands:**
-```bash
+\`\`\`bash
 pm2 status              # Check app status
 pm2 logs mechanic-website   # View logs
 pm2 restart mechanic-website # Restart app
 pm2 stop mechanic-website    # Stop app
-```
+\`\`\`
 
 ---
 
@@ -105,16 +105,16 @@ pm2 stop mechanic-website    # Stop app
 
 This allows you to serve the site on port 80/443 with a domain.
 
-```bash
+\`\`\`bash
 # Install Nginx
 sudo apt install nginx -y
 
 # Create site configuration
 sudo nano /etc/nginx/sites-available/mechanic-website
-```
+\`\`\`
 
 **Paste this configuration:**
-```nginx
+\`\`\`nginx
 server {
     listen 80;
     server_name yourdomain.com www.yourdomain.com;
@@ -131,10 +131,10 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 }
-```
+\`\`\`
 
 **Enable the site:**
-```bash
+\`\`\`bash
 # Create symlink to enable site
 sudo ln -s /etc/nginx/sites-available/mechanic-website /etc/nginx/sites-enabled/
 
@@ -143,7 +143,7 @@ sudo nginx -t
 
 # Restart Nginx
 sudo systemctl restart nginx
-```
+\`\`\`
 
 ---
 
@@ -151,7 +151,7 @@ sudo systemctl restart nginx
 
 Free SSL with Let's Encrypt:
 
-```bash
+\`\`\`bash
 # Install Certbot
 sudo apt install certbot python3-certbot-nginx -y
 
@@ -160,7 +160,7 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 
 # Auto-renewal is set up automatically, but you can test it:
 sudo certbot renew --dry-run
-```
+\`\`\`
 
 ---
 
@@ -169,16 +169,16 @@ sudo certbot renew --dry-run
 Edit these files to add your real information:
 
 ### `/components/contact.tsx`
-```typescript
+\`\`\`typescript
 const CONTACT_INFO = {
   phone: "07XXX XXXXXX",        // Your phone number
   email: "you@email.com",       // Your email
   serviceArea: "Edinburgh and surrounding areas",
 }
-```
+\`\`\`
 
 ### `/components/footer.tsx`
-```typescript
+\`\`\`typescript
 const CONTACT_INFO = {
   phone: "07XXX XXXXXX",
   email: "you@email.com",
@@ -189,13 +189,13 @@ const SOCIAL_LINKS = {
   facebook: "https://facebook.com/yourbusiness",
   instagram: "https://instagram.com/yourbusiness",
 }
-```
+\`\`\`
 
 After making changes, rebuild and restart:
-```bash
+\`\`\`bash
 npm run build
 pm2 restart mechanic-website
-```
+\`\`\`
 
 ---
 
@@ -203,7 +203,7 @@ pm2 restart mechanic-website
 
 Edit `/components/portfolio.tsx` and add items to the array:
 
-```typescript
+\`\`\`typescript
 const portfolioItems = [
   {
     title: "Engine Overhaul",
@@ -216,7 +216,7 @@ const portfolioItems = [
   },
   // Add more items...
 ]
-```
+\`\`\`
 
 Upload images to `/public/images/` folder.
 
@@ -224,40 +224,40 @@ Upload images to `/public/images/` folder.
 
 ## Firewall Setup
 
-```bash
+\`\`\`bash
 # Allow SSH, HTTP, and HTTPS
 sudo ufw allow ssh
 sudo ufw allow 'Nginx Full'
 sudo ufw enable
-```
+\`\`\`
 
 ---
 
 ## Troubleshooting
 
 ### App not starting?
-```bash
+\`\`\`bash
 pm2 logs mechanic-website --lines 50
-```
+\`\`\`
 
 ### Port 3000 already in use?
-```bash
+\`\`\`bash
 sudo lsof -i :3000
 kill -9 <PID>
-```
+\`\`\`
 
 ### Nginx errors?
-```bash
+\`\`\`bash
 sudo nginx -t
 sudo tail -f /var/log/nginx/error.log
-```
+\`\`\`
 
 ### Need to rebuild?
-```bash
+\`\`\`bash
 rm -rf .next
 npm run build
 pm2 restart mechanic-website
-```
+\`\`\`
 
 ---
 
