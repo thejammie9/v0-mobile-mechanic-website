@@ -1,5 +1,12 @@
 import { Phone, Mail, MapPin } from "lucide-react"
 
+// TODO: Update with your actual contact details
+const CONTACT_INFO = {
+  phone: "", // e.g., "07XXX XXXXXX"
+  email: "", // e.g., "yourname@email.com"
+  serviceArea: "Edinburgh and surrounding areas",
+}
+
 export default function Contact() {
   return (
     <section className="py-16 bg-gray-100" id="contact">
@@ -16,7 +23,9 @@ export default function Contact() {
                   <Phone className="h-5 w-5 text-orange-600 mt-1 mr-3" />
                   <div>
                     <p className="font-medium">Phone</p>
-                    <p className="text-gray-600">07123 456789</p>
+                    <p className="text-gray-600">
+                      {CONTACT_INFO.phone || <span className="text-gray-400 italic">Add phone number</span>}
+                    </p>
                   </div>
                 </div>
 
@@ -24,7 +33,9 @@ export default function Contact() {
                   <Mail className="h-5 w-5 text-orange-600 mt-1 mr-3" />
                   <div>
                     <p className="font-medium">Email</p>
-                    <p className="text-gray-600">info@edinburghmobilemechanic.com</p>
+                    <p className="text-gray-600">
+                      {CONTACT_INFO.email || <span className="text-gray-400 italic">Add email address</span>}
+                    </p>
                   </div>
                 </div>
 
@@ -32,7 +43,7 @@ export default function Contact() {
                   <MapPin className="h-5 w-5 text-orange-600 mt-1 mr-3" />
                   <div>
                     <p className="font-medium">Service Area</p>
-                    <p className="text-gray-600">Edinburgh and surrounding areas (within 20 miles)</p>
+                    <p className="text-gray-600">{CONTACT_INFO.serviceArea}</p>
                   </div>
                 </div>
               </div>

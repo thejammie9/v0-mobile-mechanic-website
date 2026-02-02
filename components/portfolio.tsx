@@ -1,39 +1,46 @@
-import Image from "next/image"
+import { Camera, Plus, Quote } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
-const portfolioItems = [
-  {
-    title: "Engine Overhaul",
-    vehicle: "2018 VW Golf",
-    description: "Complete engine rebuild after catastrophic timing belt failure.",
-    imageBefore: "/placeholder.svg?height=300&width=400",
-    imageAfter: "/placeholder.svg?height=300&width=400",
-    testimonial:
-      "John saved my Golf when other garages quoted me thousands. Fast, professional service right on my driveway!",
-    customer: "Michael S.",
-  },
-  {
-    title: "Brake System Replacement",
-    vehicle: "2020 Ford Focus",
-    description: "Full brake system overhaul including discs, pads and calipers.",
-    imageBefore: "/placeholder.svg?height=300&width=400",
-    imageAfter: "/placeholder.svg?height=300&width=400",
-    testimonial: "Incredible service! Same-day brake replacement at my office car park. Couldn't be happier.",
-    customer: "Sarah T.",
-  },
-  {
-    title: "Electrical Fault Diagnosis",
-    vehicle: "2019 Audi A4",
-    description: "Complex electrical issue diagnosed and repaired without dealership costs.",
-    imageBefore: "/placeholder.svg?height=300&width=400",
-    imageAfter: "/placeholder.svg?height=300&width=400",
-    testimonial:
-      "After weeks of frustration with my Audi's electrical gremlins, the problem was solved in hours. Brilliant service!",
-    customer: "David M.",
-  },
-]
+// TODO: Add your portfolio items here
+// Each item should have: title, vehicle, description, imageBefore, imageAfter, testimonial, customer
+const portfolioItems: {
+  title: string
+  vehicle: string
+  description: string
+  imageBefore: string
+  imageAfter: string
+  testimonial: string
+  customer: string
+}[] = []
 
 export default function Portfolio() {
+  if (portfolioItems.length === 0) {
+    return (
+      <section className="py-16 bg-gray-100" id="portfolio">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12 text-blue-900">Our Recent Work</h2>
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-dashed border-2 border-gray-300 bg-white/50">
+              <CardContent className="py-12">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-100">
+                    <Camera className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-700">Portfolio Coming Soon</h3>
+                    <p className="text-gray-500 mt-2 max-w-md">
+                      Photos and testimonials from completed jobs will be displayed here. Contact us to see examples of our work.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="py-16 bg-gray-100" id="portfolio">
       <div className="container mx-auto px-4">
@@ -50,21 +57,17 @@ export default function Portfolio() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Before</p>
-                    <Image
+                    <img
                       src={item.imageBefore || "/placeholder.svg"}
                       alt={`${item.title} before`}
-                      width={400}
-                      height={300}
                       className="rounded-md object-cover h-32 w-full"
                     />
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 mb-1">After</p>
-                    <Image
+                    <img
                       src={item.imageAfter || "/placeholder.svg"}
                       alt={`${item.title} after`}
-                      width={400}
-                      height={300}
                       className="rounded-md object-cover h-32 w-full"
                     />
                   </div>
@@ -73,7 +76,7 @@ export default function Portfolio() {
               <CardFooter className="bg-gray-50 border-t">
                 <div>
                   <p className="italic text-sm text-gray-600">"{item.testimonial}"</p>
-                  <p className="text-sm font-medium mt-2">— {item.customer}</p>
+                  <p className="text-sm font-medium mt-2">- {item.customer}</p>
                 </div>
               </CardFooter>
             </Card>
