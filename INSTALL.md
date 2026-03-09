@@ -35,14 +35,14 @@ npm -v
 **Option A: Clone from GitHub**
 \`\`\`bash
 cd /var/www
-git clone https://github.com/YOUR_USERNAME/v0-mobile-mechanic-website.git
+git clone https://github.com/thejammie9/v0-mobile-mechanic-website.git
 cd v0-mobile-mechanic-website
 \`\`\`
 
 **Option B: Upload via SCP**
 \`\`\`bash
 # From your local machine
-scp -r ./v0-mobile-mechanic-website user@your-server-ip:/var/www/
+scp -r ./v0-mobile-mechanic-website thejammie9@your-server-ip:/var/www/
 \`\`\`
 
 ---
@@ -56,7 +56,35 @@ npm install
 
 ---
 
-## Step 4: Build for Production
+## Step 4: Set Up Environment Variables
+
+Create a `.env.local` file in the project root:
+
+\`\`\`bash
+nano .env.local
+\`\`\`
+
+Add these variables (get Supabase values from your Supabase project settings):
+
+\`\`\`env
+# Admin password - this is what you use to login to /admin
+ADMIN_PASSWORD=your_secure_password_here
+
+# Supabase (from your Supabase project dashboard > Settings > API)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Email notifications (optional - get from https://resend.com)
+RESEND_API_KEY=re_your_api_key_here
+ADMIN_EMAIL=your@email.com
+\`\`\`
+
+**Note:** Email notifications are optional. If you don't set `RESEND_API_KEY` and `ADMIN_EMAIL`, bookings will still be saved to the database - you just won't get email alerts.
+
+---
+
+## Step 5: Build for Production
 
 \`\`\`bash
 npm run build
@@ -64,7 +92,7 @@ npm run build
 
 ---
 
-## Step 5: Run the Application
+## Step 6: Run the Application
 
 ### Quick Start (Testing)
 \`\`\`bash
@@ -101,7 +129,7 @@ pm2 stop mechanic-website    # Stop app
 
 ---
 
-## Step 6: Set Up Nginx Reverse Proxy (Recommended)
+## Step 7: Set Up Nginx Reverse Proxy (Recommended)
 
 This allows you to serve the site on port 80/443 with a domain.
 
@@ -147,7 +175,7 @@ sudo systemctl restart nginx
 
 ---
 
-## Step 7: SSL Certificate (HTTPS)
+## Step 8: SSL Certificate (HTTPS)
 
 Free SSL with Let's Encrypt:
 
@@ -161,6 +189,19 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 # Auto-renewal is set up automatically, but you can test it:
 sudo certbot renew --dry-run
 \`\`\`
+
+---
+
+## Admin Dashboard Login
+
+**URL:** `https://yourdomain.com/admin` (or `http://your-server-ip:3000/admin`)
+
+**Password:** Whatever you set as `ADMIN_PASSWORD` in your `.env.local` file
+
+The admin dashboard allows you to:
+- View all customer booking requests
+- Update booking status (pending, confirmed, completed, cancelled)
+- See customer contact details and vehicle information
 
 ---
 
