@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation"
 import { isAdminAuthenticated } from "./actions"
-import { createClient } from "@/lib/supabase/server"
+import { getBookings } from "@/app/actions/bookings"
 import AdminDashboard from "@/components/admin-dashboard"
+
+export const dynamic = "force-dynamic"
 
 export default async function AdminPage() {
   const isAuthenticated = await isAdminAuthenticated()
@@ -10,16 +12,7 @@ export default async function AdminPage() {
     redirect("/admin/login")
   }
 
-  const supabase = await createClient()
+  const bookings = await getBookings()
 
-  const { data: bookings, error } = await supabase
-    .from("bookings")
-    .select("*")
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error("Error fetching bookings:", error)
-  }
-
-  return <AdminDashboard bookings={bookings || []} />
+  return <AdminDashboard bookings={bookings} />
 }

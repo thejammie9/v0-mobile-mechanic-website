@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { logoutAdmin } from "@/app/admin/actions"
+import { updateBookingStatus } from "@/app/actions/bookings"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -33,7 +33,7 @@ import { Wrench, LogOut, Calendar, Phone, Mail, Car, Clock, RefreshCw } from "lu
 import { format } from "date-fns"
 
 type Booking = {
-  id: string
+  id: number
   name: string
   phone: string
   email: string
@@ -61,7 +61,6 @@ export default function AdminDashboard({ bookings: initialBookings }: AdminDashb
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleLogout = async () => {
     await logoutAdmin()
@@ -69,13 +68,10 @@ export default function AdminDashboard({ bookings: initialBookings }: AdminDashb
     router.refresh()
   }
 
-  const handleStatusChange = async (bookingId: string, newStatus: string) => {
-    const { error } = await supabase
-      .from("bookings")
-      .update({ status: newStatus })
-      .eq("id", bookingId)
+  const handleStatusChange = async (bookingId: number, newStatus: string) => {
+    const result = await updateBookingStatus(bookingId, newStatus)
 
-    if (!error) {
+    if (result.success) {
       setBookings(bookings.map(b => 
         b.id === bookingId ? { ...b, status: newStatus } : b
       ))
@@ -87,15 +83,9 @@ export default function AdminDashboard({ bookings: initialBookings }: AdminDashb
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    const { data } = await supabase
-      .from("bookings")
-      .select("*")
-      .order("created_at", { ascending: false })
-    
-    if (data) {
-      setBookings(data)
-    }
-    setRefreshing(false)
+    router.refresh()
+    // Small delay to show the refresh animation
+    setTimeout(() => setRefreshing(false), 500)
   }
 
   const pendingCount = bookings.filter(b => b.status === "pending").length

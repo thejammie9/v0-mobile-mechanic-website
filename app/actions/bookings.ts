@@ -1,7 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
-import { sendBookingNotification } from "@/lib/email"
+import { createBooking as dbCreateBooking, getAllBookings, updateBookingStatus as dbUpdateStatus, type Booking } from "@/lib/db"
+import { sendBookingNotification, sendCustomerConfirmation } from "@/lib/email"
 
 export type BookingFormData = {
   name: string
@@ -14,28 +14,48 @@ export type BookingFormData = {
 }
 
 export async function createBooking(data: BookingFormData) {
-  const supabase = await createClient()
+  try {
+    // Save to SQLite database
+    const booking = dbCreateBooking({
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      vehicle: data.vehicle,
+      issue: data.issue,
+      preferred_date: data.preferredDate,
+      preferred_time: data.preferredTime,
+    })
 
-  const { error } = await supabase.from("bookings").insert({
-    name: data.name,
-    phone: data.phone,
-    email: data.email,
-    vehicle: data.vehicle,
-    issue: data.issue,
-    preferred_date: data.preferredDate,
-    preferred_time: data.preferredTime,
-    status: "pending",
-  })
+    // Send email notifications (non-blocking)
+    Promise.all([
+      sendBookingNotification(data),
+      sendCustomerConfirmation(data),
+    ]).catch((err) => {
+      console.error("Failed to send email notifications:", err)
+    })
 
-  if (error) {
+    return { success: true, bookingId: booking.id }
+  } catch (error) {
     console.error("Error creating booking:", error)
-    return { success: false, error: error.message }
+    return { success: false, error: "Failed to create booking" }
   }
+}
 
-  // Send email notification (non-blocking - don't fail the booking if email fails)
-  sendBookingNotification(data).catch((err) => {
-    console.error("Failed to send booking notification email:", err)
-  })
+export async function getBookings(): Promise<Booking[]> {
+  try {
+    return getAllBookings()
+  } catch (error) {
+    console.error("Error fetching bookings:", error)
+    return []
+  }
+}
 
-  return { success: true }
+export async function updateBookingStatus(id: number, status: string) {
+  try {
+    const success = dbUpdateStatus(id, status)
+    return { success }
+  } catch (error) {
+    console.error("Error updating booking status:", error)
+    return { success: false, error: "Failed to update status" }
+  }
 }
