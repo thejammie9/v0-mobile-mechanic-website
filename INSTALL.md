@@ -1,23 +1,38 @@
-# Installation Guide - Edinburgh Mobile Mechanic Website
+# Installation Guide - Jamie's Auto Care Website
 
-This guide covers deploying the website on a VPS (Ubuntu/Debian).
+This guide covers deploying the website on a VPS (Ubuntu/Debian) with **fully self-hosted** SQLite database and SMTP email.
+
+---
+
+## System Overview
+
+| Component | Technology | Notes |
+|-----------|-----------|-------|
+| Framework | Next.js | React-based web framework |
+| Database | SQLite | Self-hosted, file-based database |
+| Email | SMTP | Uses your existing email hosting |
+| Process Manager | PM2 | Keeps app running 24/7 |
+| Reverse Proxy | Nginx | Handles domain & SSL |
 
 ---
 
 ## Prerequisites
 
-- Node.js 18+ (recommended: 20 LTS)
-- npm or yarn
-- A VPS with SSH access
-- Domain name (optional but recommended)
+- VPS with Ubuntu/Debian (2GB RAM minimum)
+- SSH access to your server
+- Domain name pointed to your server IP
+- Email hosting credentials (SMTP details)
 
 ---
 
 ## Step 1: Install Node.js
 
-\`\`\`bash
+```bash
 # Update system packages
 sudo apt update && sudo apt upgrade -y
+
+# Install build essentials (needed for SQLite)
+sudo apt install -y build-essential python3
 
 # Install Node.js 20 LTS
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -26,126 +41,146 @@ sudo apt install -y nodejs
 # Verify installation
 node -v
 npm -v
-\`\`\`
+```
 
 ---
 
-## Step 2: Clone or Upload the Project
+## Step 2: Clone the Project
 
-**Option A: Clone from GitHub**
-\`\`\`bash
+```bash
+# Create web directory
+sudo mkdir -p /var/www
+sudo chown $USER:$USER /var/www
+
+# Clone from GitHub
 cd /var/www
 git clone https://github.com/thejammie9/v0-mobile-mechanic-website.git
 cd v0-mobile-mechanic-website
-\`\`\`
-
-**Option B: Upload via SCP**
-\`\`\`bash
-# From your local machine
-scp -r ./v0-mobile-mechanic-website thejammie9@your-server-ip:/var/www/
-\`\`\`
+```
 
 ---
 
 ## Step 3: Install Dependencies
 
-\`\`\`bash
-cd /var/www/v0-mobile-mechanic-website
+```bash
 npm install
-\`\`\`
+```
 
 ---
 
 ## Step 4: Set Up Environment Variables
 
-Create a `.env.local` file in the project root:
+Create a `.env.local` file:
 
-\`\`\`bash
+```bash
 nano .env.local
-\`\`\`
+```
 
-Add these variables (get Supabase values from your Supabase project settings):
+Add these variables:
 
-\`\`\`env
-# Admin password - this is what you use to login to /admin
+```env
+# ===================
+# ADMIN LOGIN
+# ===================
+# Password to access /admin dashboard
 ADMIN_PASSWORD=your_secure_password_here
 
-# Supabase (from your Supabase project dashboard > Settings > API)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+# ===================
+# EMAIL CONFIGURATION
+# ===================
+# Get these from your email hosting provider
+SMTP_HOST=mail.jamiesautocare.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=appointments@jamiesautocare.com
+SMTP_PASSWORD=your_email_password_here
 
-# Email notifications (optional - get from https://resend.com)
-RESEND_API_KEY=re_your_api_key_here
-ADMIN_EMAIL=your@email.com
-\`\`\`
+# Email addresses
+ADMIN_EMAIL=appointments@jamiesautocare.com
+EMAIL_FROM=contact@jamiesautocare.com
 
-**Note:** Email notifications are optional. If you don't set `RESEND_API_KEY` and `ADMIN_EMAIL`, bookings will still be saved to the database - you just won't get email alerts.
+# Your business phone (shown in customer emails)
+BUSINESS_PHONE=07XXX XXXXXX
+```
+
+**SMTP Settings Guide:**
+
+| Setting | Port 587 (Recommended) | Port 465 |
+|---------|------------------------|----------|
+| SMTP_PORT | 587 | 465 |
+| SMTP_SECURE | false | true |
+
+Save and exit: `Ctrl+X`, then `Y`, then `Enter`
 
 ---
 
-## Step 5: Build for Production
+## Step 5: Create Data Directory
 
-\`\`\`bash
+```bash
+# Create directory for SQLite database
+mkdir -p data
+
+# Set permissions
+chmod 755 data
+```
+
+The database file (`bookings.db`) will be created automatically when the first booking is made.
+
+---
+
+## Step 6: Build for Production
+
+```bash
 npm run build
-\`\`\`
+```
 
 ---
 
-## Step 6: Run the Application
-
-### Quick Start (Testing)
-\`\`\`bash
-npm run start
-\`\`\`
-The site will be available at `http://your-server-ip:3000`
-
-### Production with PM2 (Recommended)
+## Step 7: Run with PM2
 
 PM2 keeps your app running and restarts it if it crashes.
 
-\`\`\`bash
+```bash
 # Install PM2 globally
 sudo npm install -g pm2
 
 # Start the application
-pm2 start npm --name "mechanic-website" -- start
+pm2 start npm --name "jamies-autocare" -- start
 
-# Save PM2 process list (auto-restart on reboot)
+# Save PM2 process list
 pm2 save
 
 # Set PM2 to start on system boot
 pm2 startup
-# Follow the instructions it outputs
-\`\`\`
+# Follow the instructions it outputs (copy/paste the command it gives you)
+```
 
 **Useful PM2 Commands:**
-\`\`\`bash
-pm2 status              # Check app status
-pm2 logs mechanic-website   # View logs
-pm2 restart mechanic-website # Restart app
-pm2 stop mechanic-website    # Stop app
-\`\`\`
+```bash
+pm2 status                  # Check app status
+pm2 logs jamies-autocare    # View logs
+pm2 restart jamies-autocare # Restart app
+pm2 stop jamies-autocare    # Stop app
+```
 
 ---
 
-## Step 7: Set Up Nginx Reverse Proxy (Recommended)
+## Step 8: Set Up Nginx
 
-This allows you to serve the site on port 80/443 with a domain.
-
-\`\`\`bash
+```bash
 # Install Nginx
 sudo apt install nginx -y
 
 # Create site configuration
-sudo nano /etc/nginx/sites-available/mechanic-website
-\`\`\`
+sudo nano /etc/nginx/sites-available/jamies-autocare
+```
 
-**Paste this configuration:**
-\`\`\`nginx
+**Paste this configuration** (replace `jamiesautocare.com` with your domain):
+
+```nginx
 server {
     listen 80;
-    server_name yourdomain.com www.yourdomain.com;
+    server_name jamiesautocare.com www.jamiesautocare.com;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -159,92 +194,114 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 }
-\`\`\`
+```
 
 **Enable the site:**
-\`\`\`bash
-# Create symlink to enable site
-sudo ln -s /etc/nginx/sites-available/mechanic-website /etc/nginx/sites-enabled/
-
-# Test configuration
+```bash
+sudo ln -s /etc/nginx/sites-available/jamies-autocare /etc/nginx/sites-enabled/
 sudo nginx -t
-
-# Restart Nginx
 sudo systemctl restart nginx
-\`\`\`
+```
 
 ---
 
-## Step 8: SSL Certificate (HTTPS)
+## Step 9: SSL Certificate (HTTPS)
 
-Free SSL with Let's Encrypt:
-
-\`\`\`bash
+```bash
 # Install Certbot
 sudo apt install certbot python3-certbot-nginx -y
 
 # Get certificate (replace with your domain)
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+sudo certbot --nginx -d jamiesautocare.com -d www.jamiesautocare.com
 
-# Auto-renewal is set up automatically, but you can test it:
+# Test auto-renewal
 sudo certbot renew --dry-run
-\`\`\`
+```
 
 ---
 
-## Admin Dashboard Login
+## Step 10: Firewall Setup
 
-**URL:** `https://yourdomain.com/admin` (or `http://your-server-ip:3000/admin`)
+```bash
+sudo ufw allow ssh
+sudo ufw allow 'Nginx Full'
+sudo ufw enable
+```
 
-**Password:** Whatever you set as `ADMIN_PASSWORD` in your `.env.local` file
+---
 
-The admin dashboard allows you to:
-- View all customer booking requests
-- Update booking status (pending, confirmed, completed, cancelled)
+## Admin Dashboard
+
+**URL:** `https://jamiesautocare.com/admin`
+
+**Password:** Whatever you set as `ADMIN_PASSWORD` in `.env.local`
+
+**Features:**
+- View all booking requests
+- Update booking status (pending/confirmed/completed/cancelled)
 - See customer contact details and vehicle information
 
 ---
 
-## Updating Your Contact Details
+## Email System
 
-Edit these files to add your real information:
+The website sends two types of emails:
 
-### `/components/contact.tsx`
-\`\`\`typescript
-const CONTACT_INFO = {
-  phone: "07XXX XXXXXX",        // Your phone number
-  email: "you@email.com",       // Your email
-  serviceArea: "Edinburgh and surrounding areas",
-}
-\`\`\`
+1. **Admin Notification** (to `appointments@jamiesautocare.com`)
+   - Sent when a new booking is received
+   - Contains all customer and vehicle details
 
-### `/components/footer.tsx`
-\`\`\`typescript
+2. **Customer Confirmation** (to customer's email)
+   - Sent to confirm their booking was received
+   - Professional branded email with booking details
+
+**Testing Email:**
+After deploying, submit a test booking and check both email addresses receive the messages.
+
+---
+
+## Updating Contact Details
+
+### Business Contact Info
+
+Edit `/components/contact.tsx`:
+```typescript
 const CONTACT_INFO = {
   phone: "07XXX XXXXXX",
-  email: "you@email.com",
+  email: "contact@jamiesautocare.com",
+  serviceArea: "Edinburgh and surrounding areas",
+}
+```
+
+### Footer Info
+
+Edit `/components/footer.tsx`:
+```typescript
+const CONTACT_INFO = {
+  phone: "07XXX XXXXXX",
+  email: "contact@jamiesautocare.com",
   serviceArea: "Edinburgh & surrounding areas",
 }
 
 const SOCIAL_LINKS = {
-  facebook: "https://facebook.com/yourbusiness",
-  instagram: "https://instagram.com/yourbusiness",
+  facebook: "https://facebook.com/jamiesautocare",
+  instagram: "https://instagram.com/jamiesautocare",
 }
-\`\`\`
+```
 
-After making changes, rebuild and restart:
-\`\`\`bash
+After changes:
+```bash
 npm run build
-pm2 restart mechanic-website
-\`\`\`
+pm2 restart jamies-autocare
+```
 
 ---
 
 ## Adding Portfolio Items
 
-Edit `/components/portfolio.tsx` and add items to the array:
+Edit `/components/portfolio.tsx`:
 
-\`\`\`typescript
+```typescript
 const portfolioItems = [
   {
     title: "Engine Overhaul",
@@ -255,50 +312,65 @@ const portfolioItems = [
     testimonial: "Great service, highly recommend!",
     customer: "John D.",
   },
-  // Add more items...
+  // Add more...
 ]
-\`\`\`
+```
 
 Upload images to `/public/images/` folder.
 
 ---
 
-## Firewall Setup
+## Database Backups
 
-\`\`\`bash
-# Allow SSH, HTTP, and HTTPS
-sudo ufw allow ssh
-sudo ufw allow 'Nginx Full'
-sudo ufw enable
-\`\`\`
+Your bookings are stored in `/var/www/v0-mobile-mechanic-website/data/bookings.db`
+
+**Manual backup:**
+```bash
+cp data/bookings.db data/bookings-backup-$(date +%Y%m%d).db
+```
+
+**Automated daily backup (optional):**
+```bash
+# Add to crontab
+crontab -e
+
+# Add this line (backs up at 2am daily)
+0 2 * * * cp /var/www/v0-mobile-mechanic-website/data/bookings.db /var/www/v0-mobile-mechanic-website/data/backups/bookings-$(date +\%Y\%m\%d).db
+```
 
 ---
 
 ## Troubleshooting
 
 ### App not starting?
-\`\`\`bash
-pm2 logs mechanic-website --lines 50
-\`\`\`
+```bash
+pm2 logs jamies-autocare --lines 50
+```
+
+### Database errors?
+```bash
+# Check if data directory exists and has correct permissions
+ls -la data/
+# Should show: drwxr-xr-x for the directory
+```
+
+### Email not sending?
+1. Check SMTP credentials in `.env.local`
+2. Check logs: `pm2 logs jamies-autocare | grep -i email`
+3. Verify your email host allows SMTP connections
 
 ### Port 3000 already in use?
-\`\`\`bash
+```bash
 sudo lsof -i :3000
 kill -9 <PID>
-\`\`\`
-
-### Nginx errors?
-\`\`\`bash
-sudo nginx -t
-sudo tail -f /var/log/nginx/error.log
-\`\`\`
+```
 
 ### Need to rebuild?
-\`\`\`bash
+```bash
 rm -rf .next
 npm run build
-pm2 restart mechanic-website
-\`\`\`
+pm2 restart jamies-autocare
+```
 
 ---
 
@@ -306,9 +378,27 @@ pm2 restart mechanic-website
 
 | Task | Command |
 |------|---------|
-| Start app | `pm2 start mechanic-website` |
-| Stop app | `pm2 stop mechanic-website` |
-| Restart app | `pm2 restart mechanic-website` |
-| View logs | `pm2 logs mechanic-website` |
+| Start app | `pm2 start jamies-autocare` |
+| Stop app | `pm2 stop jamies-autocare` |
+| Restart app | `pm2 restart jamies-autocare` |
+| View logs | `pm2 logs jamies-autocare` |
 | Rebuild | `npm run build` |
-| Update code | `git pull && npm install && npm run build && pm2 restart mechanic-website` |
+| Update from Git | `git pull && npm install && npm run build && pm2 restart jamies-autocare` |
+| Backup database | `cp data/bookings.db data/bookings-backup.db` |
+
+---
+
+## File Structure
+
+```
+/var/www/v0-mobile-mechanic-website/
+├── .env.local          # Your environment variables
+├── data/
+│   └── bookings.db     # SQLite database (auto-created)
+├── app/                # Next.js pages
+├── components/         # React components
+├── lib/
+│   ├── db.ts          # Database functions
+│   └── email.ts       # Email functions
+└── public/            # Static files (images, etc.)
+```
