@@ -11,25 +11,49 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
-import { CalendarIcon, Clock } from "lucide-react"
+import { CalendarIcon, Clock, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle2 } from "lucide-react"
+import { createBooking } from "@/app/actions/bookings"
 
 export default function BookingForm() {
   const [date, setDate] = useState<Date>()
   const [timeSlot, setTimeSlot] = useState<string>("")
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // Here you would normally handle the form submission to your backend
-    // For demo purposes, we'll just show a success message
-    setSubmitted(true)
+    setLoading(true)
+    setError(null)
 
+    const formData = new FormData(e.currentTarget)
+    
+    const result = await createBooking({
+      name: formData.get("name") as string,
+      phone: formData.get("phone") as string,
+      email: formData.get("email") as string,
+      vehicle: formData.get("vehicle") as string,
+      issue: formData.get("issue") as string,
+      preferredDate: date ? format(date, "yyyy-MM-dd") : null,
+      preferredTime: timeSlot || null,
+    })
+
+    setLoading(false)
+
+    if (!result.success) {
+      setError(result.error || "Something went wrong. Please try again.")
+      return
+    }
+
+    setSubmitted(true)
     // Reset form after 5 seconds
     setTimeout(() => {
       setSubmitted(false)
+      setDate(undefined)
+      setTimeSlot("")
     }, 5000)
   }
 
@@ -56,28 +80,29 @@ export default function BookingForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="John Smith" required />
+                <Input id="name" name="name" placeholder="John Smith" required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" type="tel" placeholder="07123 456789" required />
+                <Input id="phone" name="phone" type="tel" placeholder="07123 456789" required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="john@example.com" required />
+                <Input id="email" name="email" type="email" placeholder="john@example.com" required />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="vehicle">Vehicle Make/Model</Label>
-                <Input id="vehicle" placeholder="Ford Focus 2018" required />
+                <Input id="vehicle" name="vehicle" placeholder="Ford Focus 2018" required />
               </div>
 
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="issue">Issue Description</Label>
                 <Textarea
                   id="issue"
+                  name="issue"
                   placeholder="Please describe the problem with your vehicle..."
                   className="min-h-[100px]"
                   required
