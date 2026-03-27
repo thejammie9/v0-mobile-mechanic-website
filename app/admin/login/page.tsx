@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Wrench, AlertCircle } from "lucide-react"
 
 export default function AdminLoginPage() {
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -21,7 +22,7 @@ export default function AdminLoginPage() {
     setLoading(true)
     setError(null)
 
-    const result = await loginAdmin(password)
+    const result = await loginAdmin(username, password)
 
     if (!result.success) {
       setError(result.error || "Login failed")
@@ -34,16 +35,16 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-gray-800 border-gray-700">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="bg-blue-900 p-3 rounded-full">
+            <div className="bg-blue-950 p-3 rounded-full">
               <Wrench className="h-8 w-8 text-orange-500" />
             </div>
           </div>
-          <CardTitle className="text-2xl text-blue-900">Admin Login</CardTitle>
-          <CardDescription>Enter your admin password to continue</CardDescription>
+          <CardTitle className="text-2xl text-gray-100">Admin Login</CardTitle>
+          <CardDescription className="text-gray-400">Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -55,15 +56,29 @@ export default function AdminLoginPage() {
             )}
 
             <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                autoFocus
+                autoComplete="username"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter admin password"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                autoFocus
+                autoComplete="current-password"
               />
             </div>
 

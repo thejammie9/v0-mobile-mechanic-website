@@ -25,3 +25,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Live database files (customer data — never commit these)
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Uploaded customer/job photos
+public/uploads/*
+!public/uploads/.gitkeep

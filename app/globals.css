@@ -78,3 +78,35 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Invoice/Quote print — hide everything except the overlay.
+   Must use body { visibility: hidden } (not body *) so that
+   .invoice-print-overlay can override via inheritance. */
+@media print {
+  body:has(.invoice-print-overlay) {
+    visibility: hidden;
+  }
+  .invoice-print-overlay {
+    visibility: visible;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+  .invoice-print-overlay * {
+    visibility: visible;
+  }
+  .invoice-print-toolbar {
+    display: none !important;
+  }
+  .invoice-page {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  @page {
+    margin: 12mm;
+    size: A4 portrait;
+  }
+}
