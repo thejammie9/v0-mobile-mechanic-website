@@ -833,7 +833,7 @@ type PartsItem = {
 }
 
 // Send professional invoice email to customer
-export async function sendInvoiceEmail(invoice: Invoice, customMessage?: string | null): Promise<{ success: boolean; error?: string }> {
+export async function sendInvoiceEmail(invoice: Invoice, customMessage?: string | null, paymentLink?: string | null, depositAmount?: number | null): Promise<{ success: boolean; error?: string }> {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
     return { success: false, error: "SMTP not configured" }
   }
@@ -901,13 +901,9 @@ export async function sendInvoiceEmail(invoice: Invoice, customMessage?: string 
       healthReportAttachment = { filename: "vehicle-health-report.pdf", path: hrPath }
     }
   }
-  const healthReportHtml = healthReportAttachment ? `
-    <!-- Vehicle Health Report notice -->
-    <div style="padding:20px 40px 0;">
-      <div style="background:#f0f4f8; border-left:4px solid #1e3a5f; border-radius:4px; padding:14px 18px;">
-        <p style="margin:0; font-size:13px; color:#374151;"><strong>Vehicle Health Report</strong> — see attached PDF for your full diagnostic report.</p>
-      </div>
-    </div>` : ""
+  const healthReportHtml = healthReportAttachment
+    ? `<div style="background:#f0f4f8; border-left:4px solid #1e3a5f; border-radius:0 4px 4px 0; padding:14px 18px;"><div style="font-size:13px; color:#374151;"><strong>Vehicle Health Report</strong> — see the attached PDF for your full diagnostic report.</div></div>`
+    : ""
 
   const html = `
 <!DOCTYPE html>
@@ -916,148 +912,189 @@ export async function sendInvoiceEmail(invoice: Invoice, customMessage?: string 
   <meta charset="utf-8">
   <title>Invoice ${invoice.invoice_number}</title>
 </head>
-<body style="margin:0; padding:0; font-family: Arial, sans-serif; background:#f3f4f6; color:#1f2937;">
-  <div style="max-width:680px; margin:30px auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+<body style="margin:0; padding:0; font-family:Arial, sans-serif; background:#f3f4f6; color:#1f2937;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;">
+    <tr>
+      <td align="center" style="padding:30px 16px;">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
 
-    <!-- Header -->
-    <div style="background:#1e3a5f; color:white; padding:32px 40px; display:flex; justify-content:space-between; align-items:flex-start;">
-      <div>
-        <h1 style="margin:0; font-size:26px; font-weight:700;">Jamie's Auto Care</h1>
-        ${businessPhone ? `<p style="margin:6px 0 0; opacity:0.85; font-size:13px;">${businessPhone}</p>` : ""}
-        ${businessAddress ? `<p style="margin:6px 0 0; opacity:0.8; font-size:12px; white-space:pre-line;">${businessAddress}</p>` : ""}
-      </div>
-      <div style="text-align:right;">
-        <div style="font-size:22px; font-weight:700; letter-spacing:1px;">INVOICE</div>
-        <div style="font-size:15px; margin-top:4px; opacity:0.9;">${invoice.invoice_number}</div>
-        <div style="font-size:13px; margin-top:2px; opacity:0.75;">${invoiceDate}</div>
-      </div>
-    </div>
-
-    <!-- Customer details -->
-    <div style="padding:28px 40px; border-bottom:1px solid #e5e7eb;">
-      <h2 style="margin:0 0 14px; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:#6b7280;">Bill To</h2>
-      <p style="margin:0; font-size:17px; font-weight:600; color:#111827;">${invoice.customer_name}</p>
-      ${invoice.customer_email ? `<p style="margin:4px 0 0; color:#4b5563;">${invoice.customer_email}</p>` : ""}
-      ${invoice.customer_phone ? `<p style="margin:4px 0 0; color:#4b5563;">${invoice.customer_phone}</p>` : ""}
-      ${invoice.customer_address ? `<p style="margin:4px 0 0; color:#4b5563; white-space:pre-line;">${invoice.customer_address}</p>` : ""}
-      ${invoice.vehicle ? `<p style="margin:8px 0 0; color:#4b5563;"><strong>Vehicle:</strong> ${invoice.vehicle}</p>` : ""}
-      ${invoice.mileage ? `<p style="margin:4px 0 0; color:#4b5563;"><strong>Mileage at service:</strong> ${invoice.mileage.toLocaleString()} miles</p>` : ""}
-    </div>
-
-    <!-- Labour table -->
-    <div style="padding:28px 40px 0;">
-      <h3 style="margin:0 0 12px; font-size:15px; font-weight:600; color:#1e3a5f;">Labour</h3>
-      <table style="width:100%; border-collapse:collapse; font-size:14px;">
-        <thead>
-          <tr style="background:#f0f4f8;">
-            <th style="padding:10px 12px; text-align:left; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Description</th>
-            <th style="padding:10px 12px; text-align:center; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Hours</th>
-            <th style="padding:10px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Rate/hr</th>
-            <th style="padding:10px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${labourRowsHtml}
-        </tbody>
-        <tfoot>
+          <!-- Header -->
           <tr>
-            <td colspan="3" style="padding:10px 12px; text-align:right; font-weight:600; color:#374151;">Labour Subtotal</td>
-            <td style="padding:10px 12px; text-align:right; font-weight:600;">${fmt(labourSubtotal)}</td>
+            <td style="background:#1e3a5f; padding:32px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td valign="top">
+                    <div style="font-size:24px; font-weight:700; color:#ffffff;">Jamie's Auto Care</div>
+                    ${businessPhone ? `<div style="margin-top:6px; font-size:13px; color:#a8c4e0;">${businessPhone}</div>` : ""}
+                    ${businessAddress ? `<div style="margin-top:4px; font-size:12px; color:#7fa8c9;">${businessAddress}</div>` : ""}
+                  </td>
+                  <td valign="top" align="right">
+                    <div style="font-size:20px; font-weight:700; color:#ffffff; letter-spacing:1px;">INVOICE</div>
+                    <div style="margin-top:4px; font-size:14px; color:#a8c4e0;">${invoice.invoice_number}</div>
+                    <div style="margin-top:2px; font-size:13px; color:#7fa8c9;">${invoiceDate}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
           </tr>
-        </tfoot>
-      </table>
-    </div>
 
-    <!-- Parts table -->
-    <div style="padding:20px 40px 0;">
-      <h3 style="margin:0 0 12px; font-size:15px; font-weight:600; color:#1e3a5f;">Parts &amp; Materials</h3>
-      <table style="width:100%; border-collapse:collapse; font-size:14px;">
-        <thead>
-          <tr style="background:#f0f4f8;">
-            <th style="padding:10px 12px; text-align:left; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Description</th>
-            <th style="padding:10px 12px; text-align:center; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Qty</th>
-            <th style="padding:10px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Unit Price</th>
-            <th style="padding:10px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${partsRowsHtml}
-        </tbody>
-        <tfoot>
+          <!-- Customer details -->
           <tr>
-            <td colspan="3" style="padding:10px 12px; text-align:right; font-weight:600; color:#374151;">Parts Subtotal</td>
-            <td style="padding:10px 12px; text-align:right; font-weight:600;">${fmt(partsSubtotal)}</td>
+            <td style="padding:24px 40px; border-bottom:1px solid #e5e7eb;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#9ca3af; margin-bottom:10px;">Bill To</div>
+              <div style="font-size:16px; font-weight:600; color:#111827;">${invoice.customer_name}</div>
+              ${invoice.customer_email ? `<div style="margin-top:3px; font-size:14px; color:#4b5563;">${invoice.customer_email}</div>` : ""}
+              ${invoice.customer_phone ? `<div style="margin-top:3px; font-size:14px; color:#4b5563;">${invoice.customer_phone}</div>` : ""}
+              ${invoice.customer_address ? `<div style="margin-top:3px; font-size:14px; color:#4b5563;">${invoice.customer_address}</div>` : ""}
+              ${invoice.vehicle ? `<div style="margin-top:8px; font-size:14px; color:#374151;"><strong>Vehicle:</strong> ${invoice.vehicle}</div>` : ""}
+              ${invoice.mileage ? `<div style="margin-top:3px; font-size:14px; color:#374151;"><strong>Mileage at service:</strong> ${invoice.mileage.toLocaleString()} miles</div>` : ""}
+            </td>
           </tr>
-        </tfoot>
-      </table>
-    </div>
 
-    <!-- Totals -->
-    <div style="padding:20px 40px; margin:0 40px; border-top:2px solid #e5e7eb;">
-      <table style="width:100%; font-size:15px;">
-        <tr>
-          <td style="padding:6px 0; color:#6b7280;">Labour Subtotal</td>
-          <td style="padding:6px 0; text-align:right;">${fmt(labourSubtotal)}</td>
-        </tr>
-        ${discountPct > 0 ? `
-        <tr>
-          <td style="padding:6px 0; color:#d97706;">Labour Discount (${discountPct}%)</td>
-          <td style="padding:6px 0; text-align:right; color:#d97706;">−${fmt(labourDiscountAmount)}</td>
-        </tr>` : ""}
-        <tr>
-          <td style="padding:6px 0; color:#6b7280;">Parts Subtotal</td>
-          <td style="padding:6px 0; text-align:right;">${fmt(partsSubtotal)}</td>
-        </tr>
-        <tr>
-          <td style="padding:6px 0; color:#6b7280; border-top:1px solid #e5e7eb;">Subtotal</td>
-          <td style="padding:6px 0; text-align:right; border-top:1px solid #e5e7eb;">${fmt(subtotal)}</td>
-        </tr>
-        ${invoice.vat_enabled ? `
-        <tr>
-          <td style="padding:6px 0; color:#6b7280;">VAT (${invoice.vat_rate}%)</td>
-          <td style="padding:6px 0; text-align:right;">${fmt(vatAmount)}</td>
-        </tr>` : ""}
-        <tr style="border-top:2px solid #1e3a5f;">
-          <td style="padding:12px 0 6px; font-size:18px; font-weight:700; color:#1e3a5f;">Total Due</td>
-          <td style="padding:12px 0 6px; text-align:right; font-size:18px; font-weight:700; color:#1e3a5f;">${fmt(total)}</td>
-        </tr>
-      </table>
-    </div>
+          <!-- Labour table -->
+          <tr>
+            <td style="padding:24px 40px 0;">
+              <div style="font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#1e3a5f; margin-bottom:10px;">Labour</div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; font-size:14px;">
+                <tr style="background:#f0f4f8;">
+                  <th style="padding:9px 12px; text-align:left; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Description</th>
+                  <th style="padding:9px 12px; text-align:center; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:60px;">Hours</th>
+                  <th style="padding:9px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:80px;">Rate/hr</th>
+                  <th style="padding:9px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:80px;">Amount</th>
+                </tr>
+                ${labourRowsHtml}
+                <tr>
+                  <td colspan="3" style="padding:10px 12px; text-align:right; font-weight:600; color:#374151; border-top:1px solid #e5e7eb;">Labour Subtotal</td>
+                  <td style="padding:10px 12px; text-align:right; font-weight:600; border-top:1px solid #e5e7eb;">${fmt(labourSubtotal)}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    ${invoice.notes ? `
-    <!-- Notes -->
-    <div style="padding:0 40px 20px;">
-      <h3 style="margin:0 0 8px; font-size:14px; font-weight:600; color:#374151;">Notes</h3>
-      <p style="margin:0; color:#6b7280; font-size:14px; white-space:pre-line;">${invoice.notes}</p>
-    </div>` : ""}
+          <!-- Parts table -->
+          <tr>
+            <td style="padding:20px 40px 0;">
+              <div style="font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#1e3a5f; margin-bottom:10px;">Parts &amp; Materials</div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; font-size:14px;">
+                <tr style="background:#f0f4f8;">
+                  <th style="padding:9px 12px; text-align:left; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Description</th>
+                  <th style="padding:9px 12px; text-align:center; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:50px;">Qty</th>
+                  <th style="padding:9px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:80px;">Unit</th>
+                  <th style="padding:9px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:80px;">Amount</th>
+                </tr>
+                ${partsRowsHtml}
+                <tr>
+                  <td colspan="3" style="padding:10px 12px; text-align:right; font-weight:600; color:#374151; border-top:1px solid #e5e7eb;">Parts Subtotal</td>
+                  <td style="padding:10px 12px; text-align:right; font-weight:600; border-top:1px solid #e5e7eb;">${fmt(partsSubtotal)}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    ${healthReportHtml}
+          <!-- Totals -->
+          <tr>
+            <td style="padding:16px 40px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td></td>
+                  <td width="200">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px; border-top:2px solid #e5e7eb;">
+                      <tr>
+                        <td style="padding:8px 0 4px; color:#6b7280;">Labour</td>
+                        <td style="padding:8px 0 4px; text-align:right;">${fmt(labourSubtotal)}</td>
+                      </tr>
+                      ${discountPct > 0 ? `<tr>
+                        <td style="padding:4px 0; color:#d97706;">Discount (${discountPct}%)</td>
+                        <td style="padding:4px 0; text-align:right; color:#d97706;">−${fmt(labourDiscountAmount)}</td>
+                      </tr>` : ""}
+                      <tr>
+                        <td style="padding:4px 0; color:#6b7280;">Parts</td>
+                        <td style="padding:4px 0; text-align:right;">${fmt(partsSubtotal)}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:4px 0; color:#6b7280; border-top:1px solid #e5e7eb;">Subtotal</td>
+                        <td style="padding:4px 0; text-align:right; border-top:1px solid #e5e7eb;">${fmt(subtotal)}</td>
+                      </tr>
+                      ${invoice.vat_enabled ? `<tr>
+                        <td style="padding:4px 0; color:#6b7280;">VAT (${invoice.vat_rate}%)</td>
+                        <td style="padding:4px 0; text-align:right;">${fmt(vatAmount)}</td>
+                      </tr>` : ""}
+                      <tr style="border-top:2px solid #1e3a5f;">
+                        <td style="padding:10px 0 4px; font-size:17px; font-weight:700; color:#1e3a5f;">Total Due</td>
+                        <td style="padding:10px 0 4px; text-align:right; font-size:17px; font-weight:700; color:#1e3a5f;">${fmt(total)}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    ${customMessage ? `
-    <!-- Custom message from Jamie -->
-    <div style="padding:0 40px 24px;">
-      <div style="background:#f0f4f8; border-left:4px solid #1e3a5f; border-radius:4px; padding:16px 20px;">
-        <p style="margin:0 0 6px; font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em;">Message from Jamie</p>
-        <p style="margin:0; color:#374151; font-size:14px; white-space:pre-line;">${customMessage}</p>
-      </div>
-    </div>` : ""}
+          ${invoice.notes ? `
+          <!-- Notes -->
+          <tr>
+            <td style="padding:0 40px 20px;">
+              <div style="background:#f9fafb; border-left:3px solid #d1d5db; padding:12px 16px; border-radius:0 4px 4px 0;">
+                <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#9ca3af; margin-bottom:6px;">Notes</div>
+                <div style="font-size:14px; color:#4b5563; white-space:pre-line;">${invoice.notes}</div>
+              </div>
+            </td>
+          </tr>` : ""}
 
-    <!-- Warranty -->
-    <div style="padding:0 40px 20px;">
-      <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:14px 18px;">
-        <p style="margin:0 0 4px; font-size:12px; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.05em;">Warranty</p>
-        <p style="margin:0 0 4px; font-size:13px; color:#374151;"><strong>Labour:</strong> ${labourGuarantee} from date of service</p>
-        <p style="margin:0; font-size:13px; color:#374151;"><strong>Parts:</strong> ${partsWarranty}</p>
-      </div>
-    </div>
+          ${healthReportHtml ? `
+          <tr><td style="padding:0 40px 20px;">${healthReportHtml.trim()}</td></tr>` : ""}
 
-    <!-- Footer -->
-    <div style="background:#f9fafb; border-top:1px solid #e5e7eb; padding:24px 40px; text-align:center;">
-      <p style="margin:0; font-size:16px; font-weight:600; color:#1e3a5f;">Thank you for your business!</p>
-      <p style="margin:8px 0 0; font-size:13px; color:#9ca3af;">Payment is due on the day of service. If paid by card on the day, this invoice serves as your receipt.</p>
-      <p style="margin:8px 0 0; font-size:12px; color:#9ca3af;">Jamie's Auto Care</p>
-    </div>
-  </div>
+          ${customMessage ? `
+          <!-- Message from Jamie -->
+          <tr>
+            <td style="padding:0 40px 20px;">
+              <div style="background:#f0f4f8; border-left:4px solid #1e3a5f; padding:14px 18px; border-radius:0 4px 4px 0;">
+                <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#6b7280; margin-bottom:6px;">Message from Jamie</div>
+                <div style="font-size:14px; color:#374151; white-space:pre-line;">${customMessage}</div>
+              </div>
+            </td>
+          </tr>` : ""}
+
+          <!-- Warranty -->
+          <tr>
+            <td style="padding:0 40px 24px;">
+              <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:14px 18px;">
+                <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#15803d; margin-bottom:6px;">Warranty</div>
+                <div style="font-size:13px; color:#374151; margin-bottom:3px;"><strong>Labour:</strong> ${labourGuarantee} from date of service</div>
+                <div style="font-size:13px; color:#374151;"><strong>Parts:</strong> ${partsWarranty}</div>
+              </div>
+            </td>
+          </tr>
+
+          ${paymentLink ? `
+          <!-- Payment CTA -->
+          <tr>
+            <td style="padding:4px 40px 28px; text-align:center; border-top:1px solid #e5e7eb;">
+              <div style="padding-top:20px;">
+                <div style="font-size:14px; font-weight:600; color:#374151; margin-bottom:6px;">
+                  ${depositAmount ? `Parts deposit of ${fmt(depositAmount)} required before work begins` : `Pay your invoice online`}
+                </div>
+                <div style="font-size:13px; color:#6b7280; margin-bottom:16px;">Secure card payment via SumUp</div>
+                <a href="${paymentLink}" style="display:inline-block; background:#ea580c; color:#ffffff; text-decoration:none; font-size:15px; font-weight:700; padding:13px 36px; border-radius:8px;">
+                  ${depositAmount ? `Pay Deposit — ${fmt(depositAmount)}` : `Pay Now — ${fmt(total)}`}
+                </a>
+              </div>
+            </td>
+          </tr>` : ""}
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb; border-top:1px solid #e5e7eb; padding:20px 40px; text-align:center;">
+              <div style="font-size:15px; font-weight:600; color:#1e3a5f;">Thank you for your business!</div>
+              <div style="margin-top:6px; font-size:13px; color:#9ca3af;">${paymentLink ? "Pay online using the link above, or by card on the day." : "Payment is due on the day of service. If paid by card on the day, this invoice serves as your receipt."}</div>
+              <div style="margin-top:4px; font-size:12px; color:#9ca3af;">Jamie's Auto Care${businessPhone ? ` — ${businessPhone}` : ""}</div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim()
@@ -1087,7 +1124,7 @@ ${invoice.notes ? `Notes:\n${invoice.notes}\n` : ""}${healthReportAttachment ? "
 Labour: ${labourGuarantee} from date of service
 Parts: ${partsWarranty}
 
-Payment is due on the day of service. If paid by card on the day, this invoice serves as your receipt.
+${paymentLink ? `PAY ${depositAmount ? `DEPOSIT (${fmt(depositAmount)})` : `ONLINE (${fmt(total)})`}: ${paymentLink}\n` : "Payment is due on the day of service. If paid by card on the day, this invoice serves as your receipt."}
 Thank you for your business!
   `.trim()
 
@@ -1129,7 +1166,7 @@ Thank you for your business!
 }
 
 // Send professional quote email to customer
-export async function sendQuoteEmail(quote: Quote, confirmUrl?: string | null, customMessage?: string | null): Promise<{ success: boolean; error?: string }> {
+export async function sendQuoteEmail(quote: Quote, confirmUrl?: string | null, customMessage?: string | null, paymentLink?: string | null, depositAmount?: number | null): Promise<{ success: boolean; error?: string }> {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
     return { success: false, error: "SMTP not configured" }
   }
@@ -1185,129 +1222,158 @@ export async function sendQuoteEmail(quote: Quote, confirmUrl?: string | null, c
   <meta charset="utf-8">
   <title>Quote ${quote.quote_number}</title>
 </head>
-<body style="margin:0; padding:0; font-family: Arial, sans-serif; background:#f3f4f6; color:#1f2937;">
-  <div style="max-width:680px; margin:30px auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+<body style="margin:0; padding:0; font-family:Arial, sans-serif; background:#f3f4f6; color:#1f2937;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;">
+    <tr>
+      <td align="center" style="padding:30px 16px;">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
 
-    <!-- Header -->
-    <div style="background:#1e3a5f; color:white; padding:32px 40px; display:flex; justify-content:space-between; align-items:flex-start;">
-      <div>
-        <h1 style="margin:0; font-size:26px; font-weight:700;">Jamie's Auto Care</h1>
-        ${businessPhone ? `<p style="margin:6px 0 0; opacity:0.85; font-size:13px;">${businessPhone}</p>` : ""}
-        ${businessAddress ? `<p style="margin:6px 0 0; opacity:0.8; font-size:12px; white-space:pre-line;">${businessAddress}</p>` : ""}
-      </div>
-      <div style="text-align:right;">
-        <div style="font-size:22px; font-weight:700; letter-spacing:1px;">QUOTE</div>
-        <div style="font-size:15px; margin-top:4px; opacity:0.9;">${quote.quote_number}</div>
-        <div style="font-size:13px; margin-top:2px; opacity:0.75;">${quoteDate}</div>
-      </div>
-    </div>
-
-    <!-- Customer details -->
-    <div style="padding:28px 40px; border-bottom:1px solid #e5e7eb;">
-      <h2 style="margin:0 0 14px; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:#6b7280;">Prepared For</h2>
-      <p style="margin:0; font-size:17px; font-weight:600; color:#111827;">${quote.customer_name}</p>
-      ${quote.customer_email ? `<p style="margin:4px 0 0; color:#4b5563;">${quote.customer_email}</p>` : ""}
-      ${quote.customer_phone ? `<p style="margin:4px 0 0; color:#4b5563;">${quote.customer_phone}</p>` : ""}
-      ${quote.customer_address ? `<p style="margin:4px 0 0; color:#4b5563; white-space:pre-line;">${quote.customer_address}</p>` : ""}
-      ${quote.vehicle ? `<p style="margin:8px 0 0; color:#4b5563;"><strong>Vehicle:</strong> ${quote.vehicle}</p>` : ""}
-    </div>
-
-    <!-- Labour table -->
-    <div style="padding:28px 40px 0;">
-      <h3 style="margin:0 0 12px; font-size:15px; font-weight:600; color:#1e3a5f;">Labour</h3>
-      <table style="width:100%; border-collapse:collapse; font-size:14px;">
-        <thead>
-          <tr style="background:#f0f4f8;">
-            <th style="padding:10px 12px; text-align:left; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Description</th>
-            <th style="padding:10px 12px; text-align:center; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Hours</th>
-            <th style="padding:10px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Rate/hr</th>
-            <th style="padding:10px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>${labourRowsHtml}</tbody>
-        <tfoot>
+          <!-- Header -->
           <tr>
-            <td colspan="3" style="padding:10px 12px; text-align:right; font-weight:600; color:#374151;">Labour Subtotal</td>
-            <td style="padding:10px 12px; text-align:right; font-weight:600;">${fmt(labourSubtotal)}</td>
+            <td style="background:#1e3a5f; padding:32px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td valign="top">
+                    <div style="font-size:24px; font-weight:700; color:#ffffff;">Jamie's Auto Care</div>
+                    ${businessPhone ? `<div style="margin-top:6px; font-size:13px; color:#a8c4e0;">${businessPhone}</div>` : ""}
+                    ${businessAddress ? `<div style="margin-top:4px; font-size:12px; color:#7fa8c9;">${businessAddress}</div>` : ""}
+                  </td>
+                  <td valign="top" align="right">
+                    <div style="font-size:20px; font-weight:700; color:#ffffff; letter-spacing:1px;">QUOTE</div>
+                    <div style="margin-top:4px; font-size:14px; color:#a8c4e0;">${quote.quote_number}</div>
+                    <div style="margin-top:2px; font-size:13px; color:#7fa8c9;">${quoteDate}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
           </tr>
-        </tfoot>
-      </table>
-    </div>
 
-    <!-- Parts table -->
-    <div style="padding:20px 40px 0;">
-      <h3 style="margin:0 0 12px; font-size:15px; font-weight:600; color:#1e3a5f;">Parts &amp; Materials</h3>
-      <table style="width:100%; border-collapse:collapse; font-size:14px;">
-        <thead>
-          <tr style="background:#f0f4f8;">
-            <th style="padding:10px 12px; text-align:left; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Description</th>
-            <th style="padding:10px 12px; text-align:center; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Qty</th>
-            <th style="padding:10px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Unit Price</th>
-            <th style="padding:10px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>${partsRowsHtml}</tbody>
-        <tfoot>
+          <!-- Customer details -->
           <tr>
-            <td colspan="3" style="padding:10px 12px; text-align:right; font-weight:600; color:#374151;">Parts Subtotal</td>
-            <td style="padding:10px 12px; text-align:right; font-weight:600;">${fmt(partsSubtotal)}</td>
+            <td style="padding:24px 40px; border-bottom:1px solid #e5e7eb;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#9ca3af; margin-bottom:10px;">Prepared For</div>
+              <div style="font-size:16px; font-weight:600; color:#111827;">${quote.customer_name}</div>
+              ${quote.customer_email ? `<div style="margin-top:3px; font-size:14px; color:#4b5563;">${quote.customer_email}</div>` : ""}
+              ${quote.customer_phone ? `<div style="margin-top:3px; font-size:14px; color:#4b5563;">${quote.customer_phone}</div>` : ""}
+              ${quote.customer_address ? `<div style="margin-top:3px; font-size:14px; color:#4b5563;">${quote.customer_address}</div>` : ""}
+              ${quote.vehicle ? `<div style="margin-top:8px; font-size:14px; color:#374151;"><strong>Vehicle:</strong> ${quote.vehicle}</div>` : ""}
+            </td>
           </tr>
-        </tfoot>
-      </table>
-    </div>
 
-    <!-- Totals -->
-    <div style="padding:20px 40px; margin:0 40px; border-top:2px solid #e5e7eb;">
-      <table style="width:100%; font-size:15px;">
-        <tr>
-          <td style="padding:6px 0; color:#6b7280;">Subtotal</td>
-          <td style="padding:6px 0; text-align:right;">${fmt(subtotal)}</td>
-        </tr>
-        ${quote.vat_enabled ? `
-        <tr>
-          <td style="padding:6px 0; color:#6b7280;">VAT (${quote.vat_rate}%)</td>
-          <td style="padding:6px 0; text-align:right;">${fmt(vatAmount)}</td>
-        </tr>` : ""}
-        <tr style="border-top:2px solid #1e3a5f;">
-          <td style="padding:12px 0 6px; font-size:18px; font-weight:700; color:#1e3a5f;">Quote Total</td>
-          <td style="padding:12px 0 6px; text-align:right; font-size:18px; font-weight:700; color:#1e3a5f;">${fmt(total)}</td>
-        </tr>
-      </table>
-    </div>
+          <!-- Labour table -->
+          <tr>
+            <td style="padding:24px 40px 0;">
+              <div style="font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#1e3a5f; margin-bottom:10px;">Labour</div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; font-size:14px;">
+                <tr style="background:#f0f4f8;">
+                  <th style="padding:9px 12px; text-align:left; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Description</th>
+                  <th style="padding:9px 12px; text-align:center; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:60px;">Hours</th>
+                  <th style="padding:9px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:80px;">Rate/hr</th>
+                  <th style="padding:9px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:80px;">Amount</th>
+                </tr>
+                ${labourRowsHtml}
+                <tr>
+                  <td colspan="3" style="padding:10px 12px; text-align:right; font-weight:600; color:#374151; border-top:1px solid #e5e7eb;">Labour Subtotal</td>
+                  <td style="padding:10px 12px; text-align:right; font-weight:600; border-top:1px solid #e5e7eb;">${fmt(labourSubtotal)}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    ${quote.notes ? `
-    <!-- Notes -->
-    <div style="padding:0 40px 20px;">
-      <h3 style="margin:0 0 8px; font-size:14px; font-weight:600; color:#374151;">Notes</h3>
-      <p style="margin:0; color:#6b7280; font-size:14px; white-space:pre-line;">${quote.notes}</p>
-    </div>` : ""}
+          <!-- Parts table -->
+          <tr>
+            <td style="padding:20px 40px 0;">
+              <div style="font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#1e3a5f; margin-bottom:10px;">Parts &amp; Materials</div>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; font-size:14px;">
+                <tr style="background:#f0f4f8;">
+                  <th style="padding:9px 12px; text-align:left; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db;">Description</th>
+                  <th style="padding:9px 12px; text-align:center; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:50px;">Qty</th>
+                  <th style="padding:9px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:80px;">Unit</th>
+                  <th style="padding:9px 12px; text-align:right; color:#374151; font-weight:600; border-bottom:2px solid #d1d5db; width:80px;">Amount</th>
+                </tr>
+                ${partsRowsHtml}
+                <tr>
+                  <td colspan="3" style="padding:10px 12px; text-align:right; font-weight:600; color:#374151; border-top:1px solid #e5e7eb;">Parts Subtotal</td>
+                  <td style="padding:10px 12px; text-align:right; font-weight:600; border-top:1px solid #e5e7eb;">${fmt(partsSubtotal)}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    ${customMessage ? `
-    <!-- Custom message from Jamie -->
-    <div style="padding:0 40px 24px;">
-      <div style="background:#f0f4f8; border-left:4px solid #1e3a5f; border-radius:4px; padding:16px 20px;">
-        <p style="margin:0 0 6px; font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.05em;">Message from Jamie</p>
-        <p style="margin:0; color:#374151; font-size:14px; white-space:pre-line;">${customMessage}</p>
-      </div>
-    </div>` : ""}
+          <!-- Totals -->
+          <tr>
+            <td style="padding:16px 40px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td></td>
+                  <td width="200">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px; border-top:2px solid #e5e7eb;">
+                      <tr>
+                        <td style="padding:8px 0 4px; color:#6b7280;">Subtotal</td>
+                        <td style="padding:8px 0 4px; text-align:right;">${fmt(subtotal)}</td>
+                      </tr>
+                      ${quote.vat_enabled ? `<tr>
+                        <td style="padding:4px 0; color:#6b7280;">VAT (${quote.vat_rate}%)</td>
+                        <td style="padding:4px 0; text-align:right;">${fmt(vatAmount)}</td>
+                      </tr>` : ""}
+                      <tr style="border-top:2px solid #1e3a5f;">
+                        <td style="padding:10px 0 4px; font-size:17px; font-weight:700; color:#1e3a5f;">Total</td>
+                        <td style="padding:10px 0 4px; text-align:right; font-size:17px; font-weight:700; color:#1e3a5f;">${fmt(total)}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    ${confirmUrl ? `
-    <!-- Accept quote CTA -->
-    <div style="padding:0 40px 32px; text-align:center;">
-      <p style="margin:0 0 16px; font-size:15px; color:#374151;">Happy with this quote? Accept it online and choose a date that works for you.</p>
-      <a href="${confirmUrl}" style="display:inline-block; background:#16a34a; color:white; padding:14px 32px; border-radius:8px; text-decoration:none; font-weight:700; font-size:16px; letter-spacing:0.02em;">
-        ✓ Accept This Quote &amp; Book
-      </a>
-      <p style="margin:12px 0 0; font-size:12px; color:#9ca3af;">Or call us on ${businessPhone} to discuss further.</p>
-    </div>` : ""}
+          ${quote.notes ? `
+          <!-- Notes -->
+          <tr>
+            <td style="padding:0 40px 20px;">
+              <div style="background:#f9fafb; border-left:3px solid #d1d5db; padding:12px 16px; border-radius:0 4px 4px 0;">
+                <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#9ca3af; margin-bottom:6px;">Notes</div>
+                <div style="font-size:14px; color:#4b5563; white-space:pre-line;">${quote.notes}</div>
+              </div>
+            </td>
+          </tr>` : ""}
 
-    <!-- Footer -->
-    <div style="background:#f9fafb; border-top:1px solid #e5e7eb; padding:24px 40px; text-align:center;">
-      <p style="margin:0; font-size:16px; font-weight:600; color:#1e3a5f;">Thank you for considering Jamie's Auto Care!</p>
-      <p style="margin:8px 0 0; font-size:13px; color:#9ca3af;">This quote is valid for 30 days.${confirmUrl ? "" : " To accept, please contact us."}</p>
-      <p style="margin:8px 0 0; font-size:12px; color:#9ca3af;">Jamie's Auto Care${businessPhone ? ` — ${businessPhone}` : ""}</p>
-    </div>
-  </div>
+          ${customMessage ? `
+          <!-- Message from Jamie -->
+          <tr>
+            <td style="padding:0 40px 20px;">
+              <div style="background:#f0f4f8; border-left:4px solid #1e3a5f; padding:14px 18px; border-radius:0 4px 4px 0;">
+                <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#6b7280; margin-bottom:6px;">Message from Jamie</div>
+                <div style="font-size:14px; color:#374151; white-space:pre-line;">${customMessage}</div>
+              </div>
+            </td>
+          </tr>` : ""}
+
+          ${confirmUrl ? `
+          <!-- Accept CTA -->
+          <tr>
+            <td style="padding:4px 40px 32px; text-align:center; border-top:1px solid #e5e7eb;">
+              <div style="padding-top:24px;">
+                <div style="font-size:15px; color:#374151; margin-bottom:16px;">Happy with this quote? Accept it online and choose a date that works for you.</div>
+                <a href="${confirmUrl}" style="display:inline-block; background:#16a34a; color:#ffffff; text-decoration:none; font-size:15px; font-weight:700; padding:14px 36px; border-radius:8px; letter-spacing:0.02em;">Accept This Quote &amp; Book</a>
+                ${businessPhone ? `<div style="margin-top:12px; font-size:12px; color:#9ca3af;">Or call us on ${businessPhone} to discuss further.</div>` : ""}
+              </div>
+            </td>
+          </tr>` : ""}
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb; border-top:1px solid #e5e7eb; padding:20px 40px; text-align:center;">
+              <div style="font-size:15px; font-weight:600; color:#1e3a5f;">Thank you for considering Jamie's Auto Care!</div>
+              <div style="margin-top:6px; font-size:13px; color:#9ca3af;">This quote is valid for 30 days.${confirmUrl ? "" : " To accept, please reply to this email or give us a call."}</div>
+              ${businessPhone ? `<div style="margin-top:4px; font-size:12px; color:#9ca3af;">${businessPhone}</div>` : ""}
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `.trim()
@@ -1334,7 +1400,7 @@ Subtotal: ${fmt(subtotal)}
 ${quote.vat_enabled ? `VAT (${quote.vat_rate}%): ${fmt(vatAmount)}\n` : ""}Quote Total: ${fmt(total)}
 
 ${quote.notes ? `Notes:\n${quote.notes}\n` : ""}
-This quote is valid for 30 days. To accept, please contact us.
+${paymentLink ? `Parts deposit required: £${(depositAmount ?? 0).toFixed(2)}\nPay here: ${paymentLink}\n` : ""}This quote is valid for 30 days. To accept, please contact us.
   `.trim()
 
   try {
@@ -1353,6 +1419,267 @@ This quote is valid for 30 days. To accept, please contact us.
     logEmail({ to_address: quote.customer_email, subject: `Quote ${quote.quote_number}`, type: "quote", status: "failed", error: msg })
     console.error("Failed to send quote email:", error)
     return { success: false, error: msg }
+  }
+}
+
+// Send a focused parts-deposit request email (parts list + pay button only)
+export async function sendDepositRequestEmail(
+  quote: Quote,
+  paymentLink: string,
+  depositAmount: number,
+): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+    return { success: false, error: "SMTP not configured" }
+  }
+
+  const fromEmail = process.env.EMAIL_FROM || "quotes@jamiesautocare.com"
+  const businessPhone = process.env.BUSINESS_PHONE || ""
+
+  let partsItems: { description: string; qty: number; unitPrice: number }[] = []
+  try { partsItems = JSON.parse(quote.parts_items || "[]") } catch {}
+
+  const fmt = (n: number) => `£${n.toFixed(2)}`
+
+  const partsRowsHtml = partsItems.map(item => `
+                <tr>
+                  <td style="padding:10px 12px; border-bottom:1px solid #e5e7eb; font-size:14px; color:#1f2937;">${item.description}</td>
+                  <td style="padding:10px 12px; border-bottom:1px solid #e5e7eb; text-align:center; font-size:14px; color:#374151;">${item.qty}</td>
+                  <td style="padding:10px 12px; border-bottom:1px solid #e5e7eb; text-align:right; font-size:14px; color:#374151;">${fmt(item.unitPrice)}</td>
+                  <td style="padding:10px 12px; border-bottom:1px solid #e5e7eb; text-align:right; font-size:14px; font-weight:600; color:#1f2937;">${fmt(item.qty * item.unitPrice)}</td>
+                </tr>`).join("")
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Parts Deposit — ${quote.quote_number}</title></head>
+<body style="margin:0; padding:0; font-family:Arial, sans-serif; background:#f3f4f6; color:#1f2937;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;">
+    <tr>
+      <td align="center" style="padding:30px 16px;">
+        <table width="560" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#1e3a5f; padding:28px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td valign="top">
+                    <div style="font-size:22px; font-weight:700; color:#ffffff;">Jamie's Auto Care</div>
+                    ${businessPhone ? `<div style="margin-top:4px; font-size:13px; color:#a8c4e0;">${businessPhone}</div>` : ""}
+                  </td>
+                  <td valign="top" align="right">
+                    <div style="font-size:13px; font-weight:600; color:#a8c4e0; text-transform:uppercase; letter-spacing:0.08em;">Parts Deposit</div>
+                    <div style="margin-top:3px; font-size:13px; color:#7fa8c9;">Ref: ${quote.quote_number}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Intro -->
+          <tr>
+            <td style="padding:28px 40px 20px;">
+              <div style="font-size:16px; font-weight:600; color:#111827;">Hi ${quote.customer_name},</div>
+              <div style="margin-top:10px; font-size:15px; color:#374151; line-height:1.5;">
+                To go ahead and order your parts, we need a deposit of
+                <strong style="color:#ea580c;">${fmt(depositAmount)}</strong>.
+                ${quote.vehicle ? `<br><span style="font-size:13px; color:#6b7280; margin-top:4px; display:block;">Vehicle: ${quote.vehicle}</span>` : ""}
+              </div>
+            </td>
+          </tr>
+
+          <!-- Parts table -->
+          <tr>
+            <td style="padding:0 40px 20px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                <tr style="background:#fef3ec;">
+                  <th style="padding:9px 12px; text-align:left; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#92400e; border-bottom:2px solid #fed7aa;">Part / Material</th>
+                  <th style="padding:9px 12px; text-align:center; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#92400e; border-bottom:2px solid #fed7aa; width:50px;">Qty</th>
+                  <th style="padding:9px 12px; text-align:right; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#92400e; border-bottom:2px solid #fed7aa; width:80px;">Each</th>
+                  <th style="padding:9px 12px; text-align:right; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#92400e; border-bottom:2px solid #fed7aa; width:80px;">Total</th>
+                </tr>
+                ${partsRowsHtml}
+                <tr>
+                  <td colspan="3" style="padding:12px 12px; text-align:right; font-weight:700; font-size:15px; color:#1e3a5f; border-top:2px solid #1e3a5f;">Deposit Total</td>
+                  <td style="padding:12px 12px; text-align:right; font-weight:700; font-size:15px; color:#ea580c; border-top:2px solid #1e3a5f;">${fmt(depositAmount)}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Pay button -->
+          <tr>
+            <td style="padding:8px 40px 36px; text-align:center; border-top:1px solid #e5e7eb;">
+              <div style="padding-top:24px;">
+                <a href="${paymentLink}" style="display:inline-block; background:#ea580c; color:#ffffff; text-decoration:none; font-size:16px; font-weight:700; padding:15px 44px; border-radius:8px; letter-spacing:0.02em;">
+                  Pay Deposit — ${fmt(depositAmount)}
+                </a>
+                <div style="margin-top:10px; font-size:12px; color:#9ca3af;">Secure card payment via SumUp. Parts will be ordered once payment is received.</div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb; border-top:1px solid #e5e7eb; padding:18px 40px; text-align:center;">
+              <div style="font-size:13px; color:#6b7280;">Any questions? ${businessPhone ? `Call us on ${businessPhone}` : "Reply to this email"}</div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim()
+
+  const textBody = `
+Parts Deposit Request — Jamie's Auto Care
+Ref: ${quote.quote_number}
+
+Hi ${quote.customer_name},
+
+To go ahead and order your parts we need a deposit of ${fmt(depositAmount)}.
+${quote.vehicle ? `Vehicle: ${quote.vehicle}\n` : ""}
+PARTS:
+${partsItems.map(i => `  ${i.description}: ${i.qty} x ${fmt(i.unitPrice)} = ${fmt(i.qty * i.unitPrice)}`).join("\n") || "  See quote for details"}
+
+Deposit Total: ${fmt(depositAmount)}
+
+Pay here: ${paymentLink}
+
+Parts will be ordered once payment is received.
+${businessPhone ? `Questions? Call us on ${businessPhone}` : ""}
+  `.trim()
+
+  try {
+    await transporter.sendMail({
+      from: `"Jamie's Auto Care" <${fromEmail}>`,
+      to: quote.customer_email,
+      subject: `Parts deposit required — ${fmt(depositAmount)} — ${quote.quote_number}`,
+      text: textBody,
+      html,
+    })
+    logEmail({ to_address: quote.customer_email, subject: `Parts deposit required — ${quote.quote_number}`, type: "deposit", status: "sent" })
+    return { success: true }
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Unknown error"
+    logEmail({ to_address: quote.customer_email, subject: `Parts deposit required — ${quote.quote_number}`, type: "deposit", status: "failed", error: msg })
+    console.error("Failed to send deposit request email:", error)
+    return { success: false, error: msg }
+  }
+}
+
+// Send an ad-hoc deposit payment link to a customer (not tied to a quote)
+export async function sendAdHocDepositEmail(params: {
+  name: string
+  email: string
+  amount: number
+  description: string
+  paymentLink: string
+}): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+    return { success: false, error: "SMTP not configured" }
+  }
+
+  const fromEmail = process.env.EMAIL_FROM || "quotes@jamiesautocare.com"
+  const businessPhone = process.env.BUSINESS_PHONE || ""
+  const fmt = (n: number) => `£${n.toFixed(2)}`
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Deposit Payment — Jamie's Auto Care</title></head>
+<body style="margin:0; padding:0; font-family:Arial, sans-serif; background:#f3f4f6; color:#1f2937;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;">
+    <tr>
+      <td align="center" style="padding:30px 16px;">
+        <table width="560" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#1e3a5f; padding:28px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td valign="top">
+                    <div style="font-size:22px; font-weight:700; color:#ffffff;">Jamie's Auto Care</div>
+                    ${businessPhone ? `<div style="margin-top:4px; font-size:13px; color:#a8c4e0;">${businessPhone}</div>` : ""}
+                  </td>
+                  <td valign="top" align="right">
+                    <div style="font-size:13px; font-weight:600; color:#a8c4e0; text-transform:uppercase; letter-spacing:0.08em;">Deposit Request</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px 40px;">
+              <p style="font-size:16px; color:#374151; margin:0 0 20px;">Hi ${params.name},</p>
+              <p style="font-size:14px; color:#6b7280; margin:0 0 28px; line-height:1.6;">
+                Please find your deposit payment link below. This deposit secures your booking with us.
+              </p>
+
+              <!-- Amount box -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+                <tr>
+                  <td style="background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:20px 24px;">
+                    <div style="font-size:13px; color:#92400e; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px;">Deposit Amount</div>
+                    <div style="font-size:32px; font-weight:700; color:#c2410c;">${fmt(params.amount)}</div>
+                    <div style="font-size:13px; color:#9a3412; margin-top:6px;">${params.description}</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+                <tr>
+                  <td align="center">
+                    <a href="${params.paymentLink}" style="display:inline-block; background:#ea580c; color:#ffffff; font-size:16px; font-weight:700; text-decoration:none; padding:14px 36px; border-radius:8px;">
+                      Pay Deposit Now
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top:10px;">
+                    <span style="font-size:12px; color:#9ca3af;">Secure payment powered by SumUp</span>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size:13px; color:#6b7280; margin:0; line-height:1.6;">
+                If the button doesn't work, copy and paste this link into your browser:<br>
+                <a href="${params.paymentLink}" style="color:#2563eb; word-break:break-all;">${params.paymentLink}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb; border-top:1px solid #e5e7eb; padding:20px 40px; text-align:center;">
+              <p style="margin:0; font-size:12px; color:#9ca3af;">Jamie's Auto Care${businessPhone ? ` · ${businessPhone}` : ""}</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    await transporter.sendMail({
+      from: `"Jamie's Auto Care" <${fromEmail}>`,
+      to: params.email,
+      subject: `Deposit Payment — ${fmt(params.amount)} — Jamie's Auto Care`,
+      html,
+    })
+    return { success: true }
+  } catch (err) {
+    console.error("sendAdHocDepositEmail error:", err)
+    return { success: false, error: String(err) }
   }
 }
 

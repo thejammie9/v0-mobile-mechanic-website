@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/booking`,            lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/pricing`,            lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/areas`,              lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/mot-check`,          lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/faq`,                lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/qualifications`,     lastModified: new Date(), changeFrequency: "yearly",  priority: 0.7 },
     { url: `${base}/what-to-expect`,     lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { getInvoiceById } from "@/lib/db"
+import { getInvoiceById, getSiteSetting } from "@/lib/db"
 import type { Invoice } from "@/lib/db"
 import { PrintButton } from "./print-button"
 
@@ -45,6 +45,10 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
 
   const businessPhone = process.env.BUSINESS_PHONE || ""
   const businessAddress = process.env.BUSINESS_ADDRESS || ""
+  const bizName = getSiteSetting("business_name") || "Jamie's Auto Care"
+  const companyNumber = getSiteSetting("company_number") || ""
+  const vatNumber = getSiteSetting("vat_number") || ""
+  const registeredAddress = getSiteSetting("registered_address") || ""
 
   return (
     <>
@@ -293,9 +297,11 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
           {/* ── Compact Header ── */}
           <div className="inv-header">
             <div className="inv-header-left">
-              <p className="brand-name">Jamie&apos;s Auto Care</p>
+              <p className="brand-name">{bizName}</p>
               {businessPhone && <p className="brand-sub">{businessPhone}</p>}
-              {businessAddress && <p className="brand-sub">{businessAddress}</p>}
+              {registeredAddress ? <p className="brand-sub">{registeredAddress}</p> : businessAddress && <p className="brand-sub">{businessAddress}</p>}
+              {companyNumber && <p className="brand-sub">Company No. {companyNumber}</p>}
+              {vatNumber && <p className="brand-sub">VAT No. {vatNumber}</p>}
             </div>
             <div className="inv-header-right">
               <p className="invoice-word">INVOICE</p>
@@ -442,9 +448,21 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
                     </tr>
                   ) : null}
                   <tr className="total-row">
-                    <td>Total Due</td>
+                    <td>Total</td>
                     <td>{fmt(total)}</td>
                   </tr>
+                  {invoice.parts_deposit_paid && invoice.parts_deposit_paid > 0 ? (
+                    <>
+                      <tr>
+                        <td style={{ color: "#16a34a" }}>Parts Deposit Paid</td>
+                        <td style={{ color: "#16a34a" }}>−{fmt(invoice.parts_deposit_paid)}</td>
+                      </tr>
+                      <tr className="total-row">
+                        <td>Balance Due</td>
+                        <td>{fmt(Math.max(0, total - invoice.parts_deposit_paid))}</td>
+                      </tr>
+                    </>
+                  ) : null}
                 </tbody>
               </table>
             </div>

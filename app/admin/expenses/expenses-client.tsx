@@ -21,10 +21,15 @@ const CATEGORIES = [
   "Tools & Equipment",
   "Fuel",
   "Insurance",
+  "Professional Fees",
+  "Bank Charges",
+  "Subscriptions",
   "Marketing",
   "Training",
   "Clothing/PPE",
   "Phone/Software",
+  "Office/Admin",
+  "Directors Salary",
   "Other",
 ]
 
@@ -33,10 +38,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Tools & Equipment": "bg-purple-900/50 text-purple-300 border-purple-700",
   "Fuel": "bg-orange-900/50 text-orange-300 border-orange-700",
   "Insurance": "bg-red-900/50 text-red-300 border-red-700",
+  "Professional Fees": "bg-violet-900/50 text-violet-300 border-violet-700",
+  "Bank Charges": "bg-slate-800/60 text-slate-300 border-slate-600",
+  "Subscriptions": "bg-teal-900/50 text-teal-300 border-teal-700",
   "Marketing": "bg-pink-900/50 text-pink-300 border-pink-700",
   "Training": "bg-cyan-900/50 text-cyan-300 border-cyan-700",
   "Clothing/PPE": "bg-yellow-900/50 text-yellow-300 border-yellow-700",
   "Phone/Software": "bg-indigo-900/50 text-indigo-300 border-indigo-700",
+  "Office/Admin": "bg-emerald-900/50 text-emerald-300 border-emerald-700",
+  "Directors Salary": "bg-amber-900/50 text-amber-300 border-amber-700",
   "Other": "bg-gray-700/60 text-gray-300 border-gray-600",
 }
 
@@ -66,10 +76,15 @@ function newLine(): LineItem {
 // ─── Single entry form ────────────────────────────────────────────────────────
 function SingleForm({ onAdded }: { onAdded: (e: Expense) => void }) {
   const [form, setForm] = useState({
-    date: today(), category: CATEGORIES[0], description: "", amount: "", receipt_ref: "", notes: "",
+    date: today(), category: CATEGORIES[0], description: "", amount: "", vat_amount: "", receipt_ref: "", notes: "",
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+
+  function autoVat() {
+    const amt = parseFloat(form.amount)
+    if (!isNaN(amt) && amt > 0) setForm(f => ({ ...f, vat_amount: (amt / 6).toFixed(2) }))
+  }
 
   async function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault()
@@ -81,13 +96,14 @@ function SingleForm({ onAdded }: { onAdded: (e: Expense) => void }) {
     const result = await createExpense({
       date: form.date, category: form.category,
       description: form.description.trim(), amount,
+      vat_amount: parseFloat(form.vat_amount) || 0,
       receipt_ref: form.receipt_ref.trim() || null,
       notes: form.notes.trim() || null,
     })
     setSaving(false)
     if (result.success && result.expense) {
       onAdded(result.expense)
-      setForm({ date: today(), category: CATEGORIES[0], description: "", amount: "", receipt_ref: "", notes: "" })
+      setForm({ date: today(), category: CATEGORIES[0], description: "", amount: "", vat_amount: "", receipt_ref: "", notes: "" })
     }
   }
 
@@ -110,7 +126,7 @@ function SingleForm({ onAdded }: { onAdded: (e: Expense) => void }) {
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Amount (£) *</label>
+          <label className="block text-xs text-gray-400 mb-1">Amount incl. VAT (£) *</label>
           <input type="number" step="0.01" min="0.01" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} required placeholder="0.00"
             className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
         </div>
@@ -120,11 +136,20 @@ function SingleForm({ onAdded }: { onAdded: (e: Expense) => void }) {
             className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
         </div>
         <div>
+          <label className="block text-xs text-gray-400 mb-1">VAT (Input Tax) <span className="text-gray-500 font-normal">optional</span></label>
+          <div className="flex gap-1">
+            <input type="number" step="0.01" min="0" value={form.vat_amount} onChange={e => setForm({ ...form, vat_amount: e.target.value })} placeholder="0.00"
+              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+            <button type="button" onClick={autoVat} title="Auto-calculate 20% VAT from total"
+              className="shrink-0 px-2 py-1 bg-gray-600 hover:bg-gray-500 text-gray-300 text-xs rounded-md border border-gray-500">20%</button>
+          </div>
+        </div>
+        <div>
           <label className="block text-xs text-gray-400 mb-1">Receipt Ref</label>
           <input type="text" value={form.receipt_ref} onChange={e => setForm({ ...form, receipt_ref: e.target.value })} placeholder="e.g. ECP-2026-001"
             className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
         </div>
-        <div className="md:col-span-3">
+        <div className="md:col-span-2">
           <label className="block text-xs text-gray-400 mb-1">Notes</label>
           <input type="text" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Optional notes"
             className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />

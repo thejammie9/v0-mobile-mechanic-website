@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { isAdminAuthenticated } from "@/app/admin/actions"
-import { getQuote, updateQuoteStatusAction, sendQuoteEmailAction, convertToInvoice } from "@/app/actions/quotes"
+import { getQuote, updateQuoteStatusAction, convertToInvoice, markQuoteDepositPaidAction } from "@/app/actions/quotes"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,9 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowLeft, Send, Printer, CheckCircle, Pencil, RefreshCw } from "lucide-react"
+import { ArrowLeft, Printer, CheckCircle, Pencil, RefreshCw, CheckSquare } from "lucide-react"
 import type { Quote } from "@/lib/db"
 import { DeleteQuoteButton } from "./delete-button"
+import SendQuoteButton from "./send-quote-button"
+import { AcceptDepositButton } from "./accept-deposit-button"
 
 export const dynamic = "force-dynamic"
 
@@ -104,18 +106,15 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
           </Link>
 
           {/* Send quote email */}
-          <form
-            action={async () => {
-              "use server"
-              await sendQuoteEmailAction(quoteId)
-              redirect(`/admin/quotes/${quoteId}`)
-            }}
-          >
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Send className="h-4 w-4 mr-2" />
-              Send Quote Email
-            </Button>
-          </form>
+          <SendQuoteButton
+            quoteId={quoteId}
+            quoteNumber={quote.quote_number}
+            customerName={quote.customer_name}
+            vehicle={quote.vehicle || ""}
+            hasSumUp={!!process.env.SUMUP_API_KEY}
+            existingPaymentLink={quote.payment_link ?? null}
+            existingDepositAmount={quote.deposit_amount ?? null}
+          />
 
           {/* Convert to Invoice */}
           {quote.status !== "converted" && (
@@ -137,8 +136,13 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
             </form>
           )}
 
-          {/* Mark as Accepted */}
-          {quote.status !== "accepted" && quote.status !== "converted" && (
+          {/* Accept & send deposit (when SumUp configured and parts exist) */}
+          {quote.status !== "accepted" && quote.status !== "converted" && partsSubtotal > 0 && !!process.env.SUMUP_API_KEY && (
+            <AcceptDepositButton quoteId={quoteId} />
+          )}
+
+          {/* Mark as Accepted (plain — no SumUp or no parts) */}
+          {quote.status !== "accepted" && quote.status !== "converted" && (partsSubtotal === 0 || !process.env.SUMUP_API_KEY) && (
             <form
               action={async () => {
                 "use server"
@@ -190,6 +194,22 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
               Print / Save PDF
             </Button>
           </Link>
+
+          {/* Mark Deposit Paid */}
+          {quote.deposit_amount && quote.deposit_amount > 0 && !quote.deposit_paid_amount && (
+            <form
+              action={async () => {
+                "use server"
+                await markQuoteDepositPaidAction(quoteId, quote.deposit_amount!)
+                redirect(`/admin/quotes/${quoteId}`)
+              }}
+            >
+              <Button type="submit" className="bg-orange-700 hover:bg-orange-600 text-white">
+                <CheckSquare className="h-4 w-4 mr-2" />
+                Mark Deposit Paid
+              </Button>
+            </form>
+          )}
 
           {/* Delete */}
           <DeleteQuoteButton quoteId={quoteId} />
@@ -267,6 +287,17 @@ export default async function QuotePage({ params }: { params: Promise<{ id: stri
                     {quote.vat_enabled ? `Yes (${quote.vat_rate}%)` : "No"}
                   </span>
                 </div>
+                {quote.deposit_amount && quote.deposit_amount > 0 ? (
+                  <div>
+                    <span className="text-gray-400">Deposit: </span>
+                    <span className="text-gray-200">£{quote.deposit_amount.toFixed(2)} </span>
+                    {quote.deposit_paid_amount && quote.deposit_paid_amount > 0 ? (
+                      <Badge className="bg-green-900/50 text-green-300 border-green-700 ml-1">Paid</Badge>
+                    ) : (
+                      <Badge className="bg-orange-900/50 text-orange-300 border-orange-700 ml-1">Awaiting</Badge>
+                    )}
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
           </div>

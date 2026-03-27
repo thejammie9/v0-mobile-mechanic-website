@@ -31,6 +31,8 @@ import {
   Search,
   UserCog,
   ImageIcon,
+  CreditCard,
+  Banknote,
 } from "lucide-react"
 
 // Links visible to all roles
@@ -59,6 +61,8 @@ const submenus = [
       { href: "/admin/reports", label: "Reports", icon: TrendingUp },
       { href: "/admin/expenses", label: "Expenses", icon: Receipt },
       { href: "/admin/mileage", label: "Mileage", icon: Car },
+      { href: "/admin/sumup", label: "SumUp Sync", icon: CreditCard },
+      { href: "/admin/collect-deposit", label: "Collect Deposit", icon: Banknote },
     ],
   },
   {

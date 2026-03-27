@@ -8,7 +8,7 @@ import { linkBookingToCustomer } from "@/app/actions/customers"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { ClipboardCheck, ChevronDown, ChevronUp, Save, FileText, Link as LinkIcon, ExternalLink, Receipt, Pencil, MessageCircle, CheckCircle2, Camera, X as XIcon, Upload, Loader2 } from "lucide-react"
+import { ClipboardCheck, ChevronDown, ChevronUp, Save, FileText, Link as LinkIcon, ExternalLink, Receipt, Pencil, MessageCircle, CheckCircle2, Camera, X as XIcon, Upload, Loader2, Banknote } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import type { Booking, CustomerWithCounts, Quote, Invoice } from "@/lib/db"
@@ -166,6 +166,28 @@ function JobRow({
             <p className="text-sm text-gray-300 mt-0.5 line-clamp-2 leading-snug">
               {issueDisplay || <span className="text-gray-500 italic">No job description</span>}
             </p>
+            {quote && (() => {
+              const labour: { description: string; hours: number; rate: number }[] = (() => { try { return JSON.parse(quote.labour_items || "[]") } catch { return [] } })()
+              const parts: { description: string; qty: number; unitPrice: number }[] = (() => { try { return JSON.parse(quote.parts_items || "[]") } catch { return [] } })()
+              const totalHours = labour.reduce((s, r) => s + (r.hours || 0), 0)
+              const labourTotal = labour.reduce((s, r) => s + (r.hours || 0) * (r.rate || 0), 0)
+              const partsTotal = parts.reduce((s, r) => s + (r.qty || 0) * (r.unitPrice || 0), 0)
+              if (labourTotal === 0 && partsTotal === 0) return null
+              return (
+                <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                  {labourTotal > 0 && (
+                    <span className="text-xs text-purple-300 bg-purple-900/30 border border-purple-800/50 px-2 py-0.5 rounded-full">
+                      Labour: {totalHours}h · £{labourTotal.toFixed(2)}
+                    </span>
+                  )}
+                  {partsTotal > 0 && (
+                    <span className="text-xs text-orange-300 bg-orange-900/30 border border-orange-800/50 px-2 py-0.5 rounded-full">
+                      Parts: £{partsTotal.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              )
+            })()}
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               <span className="text-xs text-gray-500">{displayDate}</span>
               {booking.confirmed_time && (
@@ -193,7 +215,7 @@ function JobRow({
               </Link>
             )}
             {invoice && (
-              <Link href={`/admin/invoices/${invoice.id}/edit`} title="View Invoice">
+              <Link href={`/admin/invoices/${invoice.id}`} title="View Invoice">
                 <Button size="sm" variant="outline" className="h-7 px-2 border-green-700 text-green-300 hover:bg-green-900/30 text-xs">
                   <Receipt className="h-3.5 w-3.5 mr-1" />
                   Invoice
@@ -334,7 +356,7 @@ function JobRow({
                     <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                     {invoiceStatus === "paid" ? "Mark Unpaid" : `Mark Paid (${paymentMethod})`}
                   </Button>
-                  <Link href={`/admin/invoices/${invoice.id}/edit`} className="text-xs text-green-400 hover:text-green-300 underline">
+                  <Link href={`/admin/invoices/${invoice.id}`} className="text-xs text-green-400 hover:text-green-300 underline">
                     View Invoice
                   </Link>
                 </div>
@@ -368,11 +390,35 @@ function JobRow({
                 Create Invoice
               </Button>
             )}
-            <Link href={`/admin/quotes/new?name=${encodeURIComponent(booking.name)}&email=${encodeURIComponent(booking.email)}&phone=${encodeURIComponent(booking.phone)}&vehicle=${encodeURIComponent([booking.vehicle, booking.vehicle_reg].filter(Boolean).join(" "))}`}>
-              <Button size="sm" variant="outline"
-                className="border-blue-700 text-blue-300 hover:bg-blue-900/30">
-                <Receipt className="h-3.5 w-3.5 mr-1.5" />
-                Send Quote
+            {invoice && (
+              <Link href={`/admin/invoices/${invoice.id}`}>
+                <Button size="sm" variant="outline" className="border-green-700 text-green-300 hover:bg-green-900/30">
+                  <Receipt className="h-3.5 w-3.5 mr-1.5" />
+                  View Invoice
+                </Button>
+              </Link>
+            )}
+            {quote && (
+              <Link href={`/admin/quotes/${quote.id}`}>
+                <Button size="sm" variant="outline" className="border-blue-700 text-blue-300 hover:bg-blue-900/30">
+                  <FileText className="h-3.5 w-3.5 mr-1.5" />
+                  View Quote
+                </Button>
+              </Link>
+            )}
+            {!quote && (
+              <Link href={`/admin/quotes/new?name=${encodeURIComponent(booking.name)}&email=${encodeURIComponent(booking.email)}&phone=${encodeURIComponent(booking.phone)}&vehicle=${encodeURIComponent([booking.vehicle, booking.vehicle_reg].filter(Boolean).join(" "))}`}>
+                <Button size="sm" variant="outline"
+                  className="border-blue-700 text-blue-300 hover:bg-blue-900/30">
+                  <Receipt className="h-3.5 w-3.5 mr-1.5" />
+                  Send Quote
+                </Button>
+              </Link>
+            )}
+            <Link href={`/admin/collect-deposit?name=${encodeURIComponent(booking.name)}&phone=${encodeURIComponent(booking.phone)}&email=${encodeURIComponent(booking.email)}&description=${encodeURIComponent([booking.vehicle, booking.vehicle_reg].filter(Boolean).join(" ") || booking.issue)}`}>
+              <Button size="sm" variant="outline" className="border-yellow-700 text-yellow-300 hover:bg-yellow-900/30">
+                <Banknote className="h-3.5 w-3.5 mr-1.5" />
+                Collect Deposit
               </Button>
             </Link>
             {status !== "cancelled" && status !== "completed" && (

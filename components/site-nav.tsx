@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { label: "Our Work",        href: "/#portfolio",       highlight: false },
   { label: "Reviews",         href: "/#reviews",         highlight: false },
   { label: "What to Expect",  href: "/what-to-expect",   highlight: false },
+  { label: "MOT Checker",     href: "/mot-check",        highlight: false },
   { label: "FAQ",             href: "/faq",              highlight: false },
   { label: "Blog",            href: "/blog",             highlight: false },
   { label: "Contact",         href: "/#contact",         highlight: false },

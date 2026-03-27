@@ -15,10 +15,12 @@ import {
   getCustomerById,
   linkQuoteToCustomer,
   updateCustomer,
+  markQuoteDepositPaid,
+  saveQuotePaymentLink,
   type Quote,
   type Invoice,
 } from "@/lib/db"
-import { sendQuoteEmail as emailQuote, sendAppointmentApprovalEmail } from "@/lib/email"
+import { sendQuoteEmail as emailQuote, sendDepositRequestEmail } from "@/lib/email"
 
 export async function createQuote(data: {
   customer_name: string
@@ -135,7 +137,9 @@ export async function convertToInvoice(
 
 export async function sendQuoteEmailAction(
   id: number,
-  customMessage?: string | null
+  customMessage?: string | null,
+  paymentLink?: string | null,
+  depositAmount?: number | null,
 ): Promise<{ success: boolean; error?: string }> {
   const quote = getQuoteById(id)
   if (!quote) {
@@ -145,7 +149,11 @@ export async function sendQuoteEmailAction(
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jamiesautocare.com"
   const confirmUrl = quote.confirm_token ? `${siteUrl}/quote/${quote.confirm_token}` : null
 
-  const result = await emailQuote(quote, confirmUrl, customMessage || null)
+  // Fall back to stored link if not explicitly passed
+  const link = paymentLink ?? quote.payment_link ?? null
+  const deposit = depositAmount ?? quote.deposit_amount ?? null
+
+  const result = await emailQuote(quote, confirmUrl, customMessage || null, link, deposit)
 
   if (result.success) {
     if (quote.status === "draft") {
@@ -154,6 +162,77 @@ export async function sendQuoteEmailAction(
   }
 
   return result
+}
+
+export async function acceptAndSendDeposit(
+  quoteId: number,
+): Promise<{ success: boolean; error?: string }> {
+  const quote = getQuoteById(quoteId)
+  if (!quote) return { success: false, error: "Quote not found" }
+
+  // Calculate parts subtotal
+  let partsItems: { qty: number; unitPrice: number }[] = []
+  try { partsItems = JSON.parse(quote.parts_items || "[]") } catch {}
+  const partsSubtotal = partsItems.reduce((s, i) => s + i.qty * i.unitPrice, 0)
+  if (partsSubtotal <= 0) return { success: false, error: "No parts to create a deposit for" }
+
+  const apiKey = process.env.SUMUP_API_KEY
+  if (!apiKey) return { success: false, error: "SumUp not configured" }
+
+  // Fetch merchant code
+  const meRes = await fetch("https://api.sumup.com/v0.1/me", {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  })
+  if (!meRes.ok) return { success: false, error: "Failed to reach SumUp" }
+  const me = await meRes.json()
+  const merchantCode: string = me.merchant_profile?.merchant_code
+  if (!merchantCode) return { success: false, error: "SumUp merchant_code not found" }
+
+  const ref = `${quote.quote_number}-DEP-${Date.now()}`
+  const desc = `Parts deposit — ${quote.vehicle || quote.customer_name} (${quote.quote_number})`
+
+  const checkoutRes = await fetch("https://api.sumup.com/v0.1/checkouts", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      checkout_reference: ref,
+      amount: Math.round(partsSubtotal * 100) / 100,
+      currency: "GBP",
+      description: desc,
+      merchant_code: merchantCode,
+      redirect_url: process.env.NEXT_PUBLIC_SITE_URL
+        ? `${process.env.NEXT_PUBLIC_SITE_URL}/payment-thanks`
+        : undefined,
+    }),
+  })
+
+  if (!checkoutRes.ok) {
+    const text = await checkoutRes.text()
+    return { success: false, error: `SumUp: ${text}` }
+  }
+
+  const checkoutData = await checkoutRes.json()
+  const checkoutId: string = checkoutData.id
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jamiesautocare.com"
+  const paymentLink = `${siteUrl}/pay/${checkoutId}`
+
+  // Save payment link to quote
+  saveQuotePaymentLink(quoteId, checkoutId, paymentLink, partsSubtotal)
+
+  // Mark quote as accepted
+  updateQuoteStatus(quoteId, "accepted")
+
+  // Send breakdown deposit email
+  const result = await sendDepositRequestEmail(quote, paymentLink, partsSubtotal)
+  return result
+}
+
+export async function markQuoteDepositPaidAction(
+  id: number,
+  amount: number,
+): Promise<{ success: boolean }> {
+  const ok = markQuoteDepositPaid(id, amount)
+  return { success: ok }
 }
 
 export async function getQuoteByToken(token: string): Promise<Quote | null> {
@@ -167,32 +246,6 @@ export async function acceptQuoteByToken(
 ): Promise<{ success: boolean; alreadyAccepted?: boolean; bookingId?: number; error?: string }> {
   try {
     const result = dbAcceptQuoteByToken(token, preferredDate, preferredTime)
-    if (!result.success || result.alreadyAccepted) return result
-
-    // Auto-send the approval email so the customer can confirm the appointment
-    const quote = getQuoteByConfirmToken(token)
-    if (quote && result.cancelToken && result.bookingId) {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jamiesautocare.com"
-      // We need the booking's confirm_token for the confirm link — fetch it from the new booking
-      const { getBookingById } = await import("@/lib/db")
-      const newBooking = getBookingById(result.bookingId)
-      const confirmUrl = newBooking?.confirm_token ? `${siteUrl}/confirm/${newBooking.confirm_token}` : siteUrl
-      const cancelUrl  = `${siteUrl}/cancel/${result.cancelToken}`
-      sendAppointmentApprovalEmail({
-        name:           quote.customer_name,
-        email:          quote.customer_email,
-        phone:          quote.customer_phone || "",
-        vehicle:        quote.vehicle || "",
-        vehicle_reg:    null,
-        confirmed_date: preferredDate,
-        confirmed_time: preferredTime,
-        issue:          `Accepted quote ${quote.quote_number}`,
-        address:        quote.customer_address,
-        confirmUrl,
-        cancelUrl,
-      }).catch(err => console.error("Failed to send quote acceptance approval email:", err))
-    }
-
     return result
   } catch (e) {
     console.error("acceptQuoteByToken error:", e)

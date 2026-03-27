@@ -151,6 +151,16 @@ export function getDb(): Database.Database {
     try { db.exec(`ALTER TABLE bookings ADD COLUMN customer_confirmed INTEGER DEFAULT 0`) } catch {}
     try { db.exec(`ALTER TABLE invoices ADD COLUMN paid_at TEXT`) } catch {}
     try { db.exec(`ALTER TABLE invoices ADD COLUMN payment_method TEXT`) } catch {}
+    try { db.exec(`ALTER TABLE invoices ADD COLUMN transaction_ref TEXT`) } catch {}
+    try { db.exec(`ALTER TABLE invoices ADD COLUMN payment_link TEXT`) } catch {}
+    try { db.exec(`ALTER TABLE invoices ADD COLUMN checkout_id TEXT`) } catch {}
+    try { db.exec(`ALTER TABLE invoices ADD COLUMN deposit_amount REAL`) } catch {}
+    try { db.exec(`ALTER TABLE invoices ADD COLUMN parts_deposit_paid REAL DEFAULT 0`) } catch {}
+    // Quote deposit tracking
+    try { db.exec(`ALTER TABLE quotes ADD COLUMN deposit_amount REAL`) } catch {}
+    try { db.exec(`ALTER TABLE quotes ADD COLUMN payment_link TEXT`) } catch {}
+    try { db.exec(`ALTER TABLE quotes ADD COLUMN checkout_id TEXT`) } catch {}
+    try { db.exec(`ALTER TABLE quotes ADD COLUMN deposit_paid_amount REAL DEFAULT 0`) } catch {}
     try { db.exec(`ALTER TABLE quotes ADD COLUMN confirm_token TEXT`) } catch {}
     try { db.exec(`ALTER TABLE quotes ADD COLUMN accepted_at TEXT`) } catch {}
     // Service reminder override date (for pre-existing customers not yet in the system)
@@ -238,6 +248,15 @@ export function getDb(): Database.Database {
     db.prepare(`INSERT OR IGNORE INTO site_settings (key, value, label, description, group_name) VALUES ('yell_url', '', 'Yell.com Profile URL', 'Full URL to your Yell business listing', 'Social & Directories')`).run()
     db.prepare(`INSERT OR IGNORE INTO site_settings (key, value, label, description, group_name) VALUES ('checkatrade_url', '', 'Checkatrade Profile URL', 'Full URL to your Checkatrade profile', 'Social & Directories')`).run()
     db.prepare(`INSERT OR IGNORE INTO site_settings (key, value, label, description, group_name) VALUES ('mybuilder_url', '', 'MyBuilder Profile URL', 'Full URL to your MyBuilder profile (if applicable)', 'Social & Directories')`).run()
+
+    // Company / Ltd settings
+    db.prepare(`INSERT OR IGNORE INTO site_settings (key, value, label, description, group_name) VALUES ('company_number', '', 'Company Number', 'Companies House registration number (e.g. SC123456). Shown on invoices when set.', 'Company')`).run()
+    db.prepare(`INSERT OR IGNORE INTO site_settings (key, value, label, description, group_name) VALUES ('vat_number', '', 'VAT Number', 'Your VAT registration number (e.g. GB123456789). Shown on invoices when set. Leave blank until VAT registered.', 'Company')`).run()
+    db.prepare(`INSERT OR IGNORE INTO site_settings (key, value, label, description, group_name) VALUES ('financial_year_end', '03-31', 'Financial Year End (MM-DD)', 'Your company financial year end date in MM-DD format, e.g. 03-31 for 31 March. Used in finance reports.', 'Company')`).run()
+    db.prepare(`INSERT OR IGNORE INTO site_settings (key, value, label, description, group_name) VALUES ('registered_address', '', 'Registered Address', 'Your official Companies House registered address. Shown on invoices when set.', 'Company')`).run()
+
+    // Add vat_amount column to expenses for input VAT tracking
+    try { db.exec(`ALTER TABLE expenses ADD COLUMN vat_amount REAL DEFAULT 0`) } catch {}
 
     // Create service_areas table
     db.exec(`
@@ -568,55 +587,6 @@ export function getDb(): Database.Database {
       db.prepare(`INSERT INTO admin_users (username, password_hash, role) VALUES ('admin', ?, 'admin')`).run(`${salt}:${hash}`)
     }
 
-    // ── Demo data (only on a completely fresh install with no bookings) ──────
-    const bookingCount = (db.prepare("SELECT COUNT(*) as c FROM bookings").get() as {c:number}).c
-    if (bookingCount === 0) {
-      // Demo customers via bookings
-      const today = new Date()
-      const fmt = (d: Date) => d.toISOString().split("T")[0]
-      const past   = (n: number) => { const d = new Date(today); d.setDate(d.getDate() - n); return fmt(d) }
-      const future = (n: number) => { const d = new Date(today); d.setDate(d.getDate() + n); return fmt(d) }
-
-      const insBooking = db.prepare(`
-        INSERT INTO bookings (name, phone, email, vehicle, vehicle_reg, vehicle_year, issue,
-          preferred_date, preferred_time, address, status, confirm_token, quote_id)
-        VALUES (@name, @phone, @email, @vehicle, @vehicle_reg, @vehicle_year, @issue,
-          @preferred_date, @preferred_time, @address, @status, @confirm_token, NULL)
-      `)
-
-      insBooking.run({ name: "Demo Customer", phone: "07700 900001", email: "demo@example.com", vehicle: "Ford Focus", vehicle_reg: "AB12 CDE", vehicle_year: "2018", issue: "Oil and filter service overdue. Warning light on dash.", preferred_date: future(3), preferred_time: "09:00", address: "12 Demo Street, Edinburgh, EH1 1AA", status: "confirmed", confirm_token: "demo-token-1" })
-      insBooking.run({ name: "Test User", phone: "07700 900002", email: "test@example.com", vehicle: "VW Golf", vehicle_reg: "EF34 GHI", vehicle_year: "2020", issue: "Front brake pads worn — grinding noise when stopping.", preferred_date: future(7), preferred_time: "11:00", address: "45 Test Lane, Dalkeith, EH22 2BB", status: "pending", confirm_token: "demo-token-2" })
-      insBooking.run({ name: "Sample Person", phone: "07700 900003", email: "sample@example.com", vehicle: "Toyota Yaris", vehicle_reg: "JK56 LMN", vehicle_year: "2016", issue: "Full service + diagnostic scan for engine management light.", preferred_date: past(5), preferred_time: "13:00", address: "7 Sample Road, Penicuik, EH26 3CC", status: "completed", confirm_token: "demo-token-3" })
-      insBooking.run({ name: "Example Client", phone: "07700 900004", email: "example@example.com", vehicle: "BMW 3 Series", vehicle_reg: "OP78 QRS", vehicle_year: "2019", issue: "Battery replacement and tyre pressure check.", preferred_date: past(10), preferred_time: "09:00", address: "22 Example Avenue, Bonnyrigg, EH19 4DD", status: "completed", confirm_token: "demo-token-4" })
-
-      // Demo invoices linked to completed bookings
-      const labourItems = JSON.stringify([{ description: "Oil & Filter Service", hours: 1, rate: 60 }])
-      const partsItems  = JSON.stringify([{ description: "Engine Oil 5W-30 5L", qty: 1, unitPrice: 25 }, { description: "Oil Filter", qty: 1, unitPrice: 8 }])
-      const labourItems2 = JSON.stringify([{ description: "Front Brake Pads Supply & Fit", hours: 1.5, rate: 60 }])
-      const partsItems2  = JSON.stringify([{ description: "Front Brake Pads", qty: 1, unitPrice: 45 }])
-
-      db.prepare(`
-        INSERT INTO invoices (invoice_number, customer_name, customer_email, customer_phone, vehicle,
-          labour_items, parts_items, vat_enabled, vat_rate, status, payment_method, notes, created_at)
-        VALUES ('INV-0001', 'Sample Person', 'sample@example.com', '07700 900003', 'Toyota Yaris JK56 LMN',
-          ?, ?, 0, 20, 'paid', 'cash', 'Demo invoice — oil & filter service', ?)
-      `).run(labourItems, partsItems, past(5))
-
-      db.prepare(`
-        INSERT INTO invoices (invoice_number, customer_name, customer_email, customer_phone, vehicle,
-          labour_items, parts_items, vat_enabled, vat_rate, status, payment_method, notes, created_at)
-        VALUES ('INV-0002', 'Example Client', 'example@example.com', '07700 900004', 'BMW 3 Series OP78 QRS',
-          ?, ?, 0, 20, 'paid', 'card', 'Demo invoice — brake pads', ?)
-      `).run(labourItems2, partsItems2, past(10))
-
-      db.prepare(`
-        INSERT INTO invoices (invoice_number, customer_name, customer_email, customer_phone, vehicle,
-          labour_items, parts_items, vat_enabled, vat_rate, status, notes, created_at)
-        VALUES ('INV-0003', 'Demo Customer', 'demo@example.com', '07700 900001', 'Ford Focus AB12 CDE',
-          ?, '[]', 0, 20, 'sent', 'Demo invoice — awaiting payment', ?)
-      `).run(JSON.stringify([{ description: "Full Service", hours: 2, rate: 60 }]), future(3))
-    }
-    // ── End demo data ─────────────────────────────────────────────────────────
   }
   return db
 }
@@ -711,6 +681,10 @@ export type Invoice = {
   invoice_date: string | null
   paid_at: string | null
   payment_method: string | null
+  transaction_ref: string | null
+  payment_link: string | null
+  checkout_id: string | null
+  deposit_amount: number | null
   customer_id: number | null
   mileage: number | null
   health_report: string | null
@@ -739,6 +713,10 @@ export type Quote = {
   confirm_token: string | null
   accepted_at: string | null
   created_at: string
+  deposit_amount: number | null
+  payment_link: string | null
+  checkout_id: string | null
+  deposit_paid_amount: number
 }
 
 // Create a new booking
@@ -954,13 +932,38 @@ export function getInvoiceByBookingId(bookingId: number): Invoice | null {
   return db.prepare("SELECT * FROM invoices WHERE booking_id = ? ORDER BY created_at DESC LIMIT 1").get(bookingId) as Invoice | null
 }
 
+// Save SumUp payment link on an invoice
+export function saveInvoicePaymentLink(id: number, checkoutId: string, paymentLink: string, depositAmount: number | null): boolean {
+  return getDb().prepare("UPDATE invoices SET checkout_id = ?, payment_link = ?, deposit_amount = ? WHERE id = ?")
+    .run(checkoutId, paymentLink, depositAmount, id).changes > 0
+}
+
+// Set parts deposit paid on an invoice
+export function setInvoiceDepositPaid(id: number, amount: number): boolean {
+  return getDb().prepare("UPDATE invoices SET parts_deposit_paid = ? WHERE id = ?")
+    .run(amount, id).changes > 0
+}
+
+// Save SumUp payment link on a quote
+export function saveQuotePaymentLink(id: number, checkoutId: string, paymentLink: string, depositAmount: number): boolean {
+  return getDb().prepare("UPDATE quotes SET checkout_id = ?, payment_link = ?, deposit_amount = ? WHERE id = ?")
+    .run(checkoutId, paymentLink, depositAmount, id).changes > 0
+}
+
+// Mark a quote deposit as paid
+export function markQuoteDepositPaid(id: number, amount: number): boolean {
+  return getDb().prepare("UPDATE quotes SET deposit_paid_amount = ? WHERE id = ?")
+    .run(amount, id).changes > 0
+}
+
 // Update invoice status
-export function updateInvoiceStatus(id: number, status: string, paymentMethod?: string | null): boolean {
+export function updateInvoiceStatus(id: number, status: string, paymentMethod?: string | null, transactionRef?: string | null): boolean {
   const db = getDb()
   const paidAt = status === "paid" ? new Date().toISOString() : null
   const method = status === "paid" ? (paymentMethod ?? null) : null
-  const stmt = db.prepare("UPDATE invoices SET status = ?, paid_at = ?, payment_method = ? WHERE id = ?")
-  const result = stmt.run(status, paidAt, method, id)
+  const ref = status === "paid" ? (transactionRef ?? null) : null
+  const stmt = db.prepare("UPDATE invoices SET status = ?, paid_at = ?, payment_method = ?, transaction_ref = ? WHERE id = ?")
+  const result = stmt.run(status, paidAt, method, ref, id)
   return result.changes > 0
 }
 
@@ -1583,7 +1586,7 @@ export function acceptQuoteByToken(
   // Mark quote as accepted
   db.prepare("UPDATE quotes SET accepted_at = datetime('now'), status = 'accepted' WHERE id = ?").run(quote.id)
 
-  // Create a pending booking from the quote with confirmed_date set so the approval email can reference it
+  // Create a confirmed booking — customer already agreed to the date/time by accepting the quote
   const confirm_token = require("crypto").randomBytes(24).toString("hex")
   const cancel_token  = require("crypto").randomBytes(24).toString("hex")
   const r = db.prepare(`
@@ -1591,12 +1594,12 @@ export function acceptQuoteByToken(
       name, phone, email, vehicle, issue,
       preferred_date, preferred_time,
       confirmed_date, confirmed_time,
-      status, confirm_token, cancel_token
+      status, customer_confirmed, confirm_token, cancel_token
     ) VALUES (
       @name, @phone, @email, @vehicle, @issue,
       @preferred_date, @preferred_time,
       @confirmed_date, @confirmed_time,
-      'pending', @confirm_token, @cancel_token
+      'confirmed', 1, @confirm_token, @cancel_token
     )
   `).run({
     name:           quote.customer_name,
@@ -1635,6 +1638,11 @@ export function convertQuoteToInvoice(quoteId: number): Invoice | null {
     status:           "draft",
     invoice_date:     quote.invoice_date,
   })
+
+  // Carry over any deposit paid on the quote
+  if (quote.deposit_paid_amount && quote.deposit_paid_amount > 0) {
+    db.prepare("UPDATE invoices SET parts_deposit_paid = ? WHERE id = ?").run(quote.deposit_paid_amount, invoice.id)
+  }
 
   // Link the invoice back to the quote
   db.prepare("UPDATE quotes SET converted_invoice_id = ?, status = 'converted' WHERE id = ?").run(invoice.id, quoteId)
@@ -1710,6 +1718,7 @@ export type Expense = {
   category: string
   description: string
   amount: number
+  vat_amount: number
   receipt_ref: string | null
   notes: string | null
   created_at: string
@@ -1735,7 +1744,7 @@ export function getExpenses(): Expense[] {
 
 export function addExpense(data: Omit<Expense, 'id' | 'created_at'>): Expense {
   const db = getDb()
-  const result = db.prepare(`INSERT INTO expenses (date, category, description, amount, receipt_ref, notes) VALUES (@date, @category, @description, @amount, @receipt_ref, @notes)`).run(data)
+  const result = db.prepare(`INSERT INTO expenses (date, category, description, amount, vat_amount, receipt_ref, notes) VALUES (@date, @category, @description, @amount, @vat_amount, @receipt_ref, @notes)`).run({ vat_amount: 0, ...data })
   return db.prepare('SELECT * FROM expenses WHERE id = ?').get(result.lastInsertRowid) as Expense
 }
 

@@ -36,6 +36,13 @@ const nextConfig = {
         ],
       },
       {
+        // Payment page — never cache (dynamic, real-time checkout status)
+        source: "/pay/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+        ],
+      },
+      {
         // Admin and API routes — never cache
         source: "/admin/:path*",
         headers: [

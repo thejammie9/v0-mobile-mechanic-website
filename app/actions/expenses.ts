@@ -15,6 +15,7 @@ export async function createExpense(data: {
   category: string
   description: string
   amount: number
+  vat_amount?: number
   receipt_ref: string | null
   notes: string | null
 }) {
@@ -29,6 +30,7 @@ export async function createExpenseBatch(items: {
   category: string
   description: string
   amount: number
+  vat_amount?: number
   receipt_ref: string | null
   notes: string | null
 }[]) {

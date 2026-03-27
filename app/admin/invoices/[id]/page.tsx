@@ -13,10 +13,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowLeft, Send, Printer, CheckCircle, FileText, Pencil } from "lucide-react"
+import { ArrowLeft, Printer, CheckCircle, FileText, Pencil } from "lucide-react"
 import type { Invoice } from "@/lib/db"
 import { DeleteInvoiceButton } from "./delete-button"
 import { HealthReportUpload } from "./health-report-upload"
+import SendInvoiceButton from "./send-invoice-button"
+import { DepositPaidButton } from "./deposit-paid-button"
 
 export const dynamic = "force-dynamic"
 
@@ -105,21 +107,15 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           </Link>
 
           {/* Send email */}
-          <form
-            action={async () => {
-              "use server"
-              await sendInvoiceEmail(invoiceId)
-              redirect(`/admin/invoices/${invoiceId}`)
-            }}
-          >
-            <Button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Send className="h-4 w-4 mr-2" />
-              Send Invoice Email
-            </Button>
-          </form>
+          <SendInvoiceButton
+            invoiceId={invoiceId}
+            invoiceTotal={total}
+            invoiceNumber={invoice.invoice_number}
+            customerName={invoice.customer_name}
+            vehicle={invoice.vehicle || ""}
+            hasSumUp={!!process.env.SUMUP_API_KEY}
+            existingPaymentLink={invoice.payment_link ?? null}
+          />
 
           {/* Mark as Paid */}
           {invoice.status !== "paid" && (
@@ -186,6 +182,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
               Print / Save PDF
             </Button>
           </Link>
+
+          {/* Set deposit paid */}
+          <DepositPaidButton
+            invoiceId={invoiceId}
+            currentDeposit={invoice.parts_deposit_paid ?? 0}
+          />
 
           {/* Delete */}
           <DeleteInvoiceButton invoiceId={invoiceId} />
@@ -369,6 +371,18 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
                   <span>Total</span>
                   <span>{fmt(total)}</span>
                 </div>
+                {invoice.parts_deposit_paid && invoice.parts_deposit_paid > 0 ? (
+                  <>
+                    <div className="flex justify-between text-green-400">
+                      <span>Parts Deposit Paid</span>
+                      <span>−{fmt(invoice.parts_deposit_paid)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-100 font-bold text-lg border-t border-gray-600 pt-2">
+                      <span>Balance Due</span>
+                      <span>{fmt(Math.max(0, total - invoice.parts_deposit_paid))}</span>
+                    </div>
+                  </>
+                ) : null}
               </div>
             </CardContent>
           </Card>

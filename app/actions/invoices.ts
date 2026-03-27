@@ -13,6 +13,7 @@ import {
   linkInvoiceToCustomer,
   updateCustomer,
   getBookingById,
+  setInvoiceDepositPaid,
   type Invoice,
 } from "@/lib/db"
 import { sendInvoiceEmail as emailInvoice } from "@/lib/email"
@@ -125,17 +126,22 @@ export async function deleteInvoice(id: number): Promise<{ success: boolean }> {
 
 export async function sendInvoiceEmail(
   id: number,
-  customMessage?: string | null
+  customMessage?: string | null,
+  paymentLink?: string | null,
+  depositAmount?: number | null,
 ): Promise<{ success: boolean; error?: string }> {
   const invoice = getInvoiceById(id)
   if (!invoice) {
     return { success: false, error: "Invoice not found" }
   }
 
-  const result = await emailInvoice(invoice, customMessage || null)
+  // Use stored payment link if not explicitly provided
+  const link = paymentLink ?? invoice.payment_link ?? null
+  const deposit = depositAmount ?? invoice.deposit_amount ?? null
+
+  const result = await emailInvoice(invoice, customMessage || null, link, deposit)
 
   if (result.success) {
-    // Mark as sent if it was draft
     if (invoice.status === "draft") {
       updateInvoiceStatus(id, "sent")
     }
@@ -153,6 +159,14 @@ export async function toggleInvoicePaid(
   const newStatus = invoice.status === "paid" ? "sent" : "paid"
   updateInvoiceStatus(id, newStatus, newStatus === "paid" ? paymentMethod : null)
   return { success: true, newStatus }
+}
+
+export async function setDepositPaid(
+  id: number,
+  amount: number,
+): Promise<{ success: boolean }> {
+  const ok = setInvoiceDepositPaid(id, amount)
+  return { success: ok }
 }
 
 export async function createInvoiceFromBooking(
